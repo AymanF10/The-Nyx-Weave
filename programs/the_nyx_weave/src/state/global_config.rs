@@ -1,0 +1,1 @@
+// This will define the GlobalConfig struct. Its purpose is to hold platform-wide, administrative parameters like the admin key, fee_bps, and max_retries
