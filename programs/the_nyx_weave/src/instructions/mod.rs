@@ -1,5 +1,5 @@
 pub mod initialize;
-pub mod withdraw_from_treasury;
+pub mod withdraw_deposit_treasury;
 
 pub use initialize::*;
-pub use withdraw_from_treasury::*;
+pub use withdraw_deposit_treasury::*;
