@@ -2,7 +2,8 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{self, Transfer as SystemTransfer};
 
-use anchor_spl::{token::{Token}, token_interface::{transfer_checked, Mint, TokenAccount, TransferChecked}};
+use anchor_spl::token::{Token, Mint, TokenAccount, TransferChecked, transfer_checked};
+
 
 use crate::{ error::NyxWeaveError, state::GlobalConfig, TreasuryVault, TREASURY_VAULT_SEED, GLOBAL_CONFIG_SEED};
 
@@ -13,22 +14,22 @@ pub struct WithdrawDepositTreasury<'info> {
     pub admin: Signer<'info>,
 
     #[account(mint::token_program = token_program)]
-    pub usdc_mint: InterfaceAccount<'info, Mint>,
+    pub usdc_mint: Account<'info,Mint>,
 
     #[account(mint::token_program = token_program)]
-    pub wsol_mint: InterfaceAccount<'info, Mint>,
+    pub wsol_mint: Account<'info, Mint>,
 
     #[account(mint::token_program = token_program)]
-    pub jito_mint: InterfaceAccount<'info, Mint>,
+    pub jito_mint: Account<'info, Mint>,
 
     #[account(mut, token::mint = usdc_mint, token::authority = admin)]
-    pub admin_usdc_ata: InterfaceAccount<'info, TokenAccount>,
+    pub admin_usdc_ata: Account<'info, TokenAccount>,
 
     #[account(mut, token::mint = wsol_mint, token::authority = admin)]
-    pub admin_wsol_ata: InterfaceAccount<'info, TokenAccount>,
+    pub admin_wsol_ata: Account<'info, TokenAccount>,
 
     #[account(mut, token::mint = jito_mint, token::authority = admin)]
-    pub admin_jito_ata: InterfaceAccount<'info, TokenAccount>,
+    pub admin_jito_ata: Account<'info, TokenAccount>,
 
     #[account(seeds = [GLOBAL_CONFIG_SEED.as_bytes(), admin.key().as_ref()], bump = global_config.bump, has_one = admin)]
     pub global_config: Account<'info, GlobalConfig>,
@@ -41,21 +42,21 @@ pub struct WithdrawDepositTreasury<'info> {
         token::mint = usdc_mint,
         token::authority = treasury_vault,
     )]
-    pub treasury_vault_usdc_ata: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_vault_usdc_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         token::mint = wsol_mint,
         token::authority = treasury_vault,
     )]
-    pub treasury_vault_wsol_ata: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_vault_wsol_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         token::mint = jito_mint,
         token::authority = treasury_vault,
     )]
-    pub treasury_vault_jito_ata: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_vault_jito_ata: Account<'info, TokenAccount>,
 
 
     pub system_program: Program<'info, System>,
@@ -179,9 +180,9 @@ impl<'info> WithdrawDepositTreasury<'info> {
         &self,
         mint: Pubkey,
     ) -> Result<(
-        &InterfaceAccount<'info, TokenAccount>,
-        &InterfaceAccount<'info, TokenAccount>,
-        &InterfaceAccount<'info, Mint>,
+        &Account<'info, TokenAccount>,
+        &Account<'info, TokenAccount>,
+        &Account<'info, Mint>,
     )> {
         if mint == self.usdc_mint.key() {
             Ok((&self.treasury_vault_usdc_ata, &self.admin_usdc_ata, &self.usdc_mint))
