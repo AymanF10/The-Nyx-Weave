@@ -29,25 +29,52 @@ pub mod the_nyx_weave {
     }
 
     pub fn withdraw_from_treasury(
-        ctx: Context<WithdrawDepositTreasury>,
+        ctx: Context<WithdrawFromTreasury>,
         mint: Pubkey,
         amount: u64,
     ) -> Result<()> {
         ctx.accounts.withdraw_token_from_treasury(mint, amount)
     }
 
-    pub fn deposit_to_treasury(
-        ctx: Context<WithdrawDepositTreasury>,
-        mint: Pubkey,
-        amount: u64,
-    ) -> Result<()> {
-        ctx.accounts.deposit_token_to_treasury(mint, amount)
-    }
-
     pub fn withdraw_all_tokens_from_treasury(
-        ctx: Context<WithdrawDepositTreasury>,
+        ctx: Context<WithdrawFromTreasury>,
     ) -> Result<()> {
         ctx.accounts.withdraw_all_tokens_from_treasury()
+    }
+
+    pub fn create_strategy(
+        ctx: Context<CreateStrategy>,
+        strategy_vault_bump: u8,
+        // Schedule parameters
+        frequency_sec: u64,
+        duration_sec: u64,
+        // Token parameters
+        deposit_token_mint: Pubkey,
+        hedged_token_mint: Pubkey,
+        percentage_hedge_bps: u64,
+        // AMM parameters
+        buy_amm_key: Pubkey,
+        sell_amm_key: Pubkey,
+        // Risk parameters (optional with defaults)
+        stop_loss_limit: Option<u64>,
+        price_range: Option<u64>,
+        back_off_delay: Option<u64>,
+        back_off_retry: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts.create_strategy(
+            strategy_vault_bump,
+            frequency_sec,
+            duration_sec,
+            deposit_token_mint,
+            hedged_token_mint,
+            percentage_hedge_bps,
+            buy_amm_key,
+            sell_amm_key,
+            stop_loss_limit,
+            price_range,
+            back_off_delay,
+            back_off_retry,
+        )
     }
 
 

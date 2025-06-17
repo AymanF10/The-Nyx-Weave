@@ -7,5 +7,7 @@ pub enum NyxWeaveError {
 
     #[msg("Invalid mint")]
     InvalidMint,
-    
+
+    #[msg("Invalid hedge percentage")]
+    InvalidHedgePercentage,
 }

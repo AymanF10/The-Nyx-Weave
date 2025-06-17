@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 
-use crate::{state::{GlobalConfig, TreasuryVault}};
+use crate::{state::{GlobalConfig, TreasuryVault}, GLOBAL_CONFIG_SEED, TREASURY_VAULT_SEED};
 
 
 #[derive(Accounts)]
@@ -15,7 +15,7 @@ pub struct Initialize<'info> {
         init,
         payer = admin,
         space = 8 + GlobalConfig::INIT_SPACE,
-        seeds = [b"global_config", admin.key().as_ref()],
+        seeds = [GLOBAL_CONFIG_SEED.as_bytes(), admin.key().as_ref()],
         bump
     )]
     pub global_config: Account<'info, GlobalConfig>,
@@ -24,7 +24,7 @@ pub struct Initialize<'info> {
         init,
         payer = admin,
         space = 8 + TreasuryVault::INIT_SPACE,
-        seeds = [b"treasury_vault", global_config.key().as_ref()],
+        seeds = [TREASURY_VAULT_SEED.as_bytes(), global_config.key().as_ref()],
         bump
     )]
     pub treasury_vault: Account<'info, TreasuryVault>,

@@ -5,11 +5,12 @@ use anchor_lang::system_program::{self, Transfer as SystemTransfer};
 use anchor_spl::token::{Token, Mint, TokenAccount, TransferChecked, transfer_checked};
 
 
+use crate::STRATEGY_VAULT_SEED;
 use crate::{ error::NyxWeaveError, state::GlobalConfig, TreasuryVault, TREASURY_VAULT_SEED, GLOBAL_CONFIG_SEED};
 
 
 #[derive(Accounts)]
-pub struct WithdrawDepositTreasury<'info> {
+pub struct DepositToTreasury<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
@@ -22,19 +23,23 @@ pub struct WithdrawDepositTreasury<'info> {
     #[account(mint::token_program = token_program)]
     pub jito_mint: Account<'info, Mint>,
 
-    #[account(mut, token::mint = usdc_mint, token::authority = admin)]
-    pub admin_usdc_ata: Account<'info, TokenAccount>,
+    #[account(mut, token::mint = usdc_mint, token::authority = strategy_vault)]
+    pub vault_usdc_ata: Account<'info, TokenAccount>,
 
-    #[account(mut, token::mint = wsol_mint, token::authority = admin)]
-    pub admin_wsol_ata: Account<'info, TokenAccount>,
+    #[account(mut, token::mint = wsol_mint, token::authority = strategy_vault)]
+    pub vault_wsol_ata: Account<'info, TokenAccount>,
 
-    #[account(mut, token::mint = jito_mint, token::authority = admin)]
-    pub admin_jito_ata: Account<'info, TokenAccount>,
+    #[account(mut, token::mint = jito_mint, token::authority = strategy_vault)]
+    pub vault_jito_ata: Account<'info, TokenAccount>,
+
+    //TODO change the PDA seed derivation of the strategy vault
+    #[account(seeds = [STRATEGY_VAULT_SEED.as_bytes(), admin.key().as_ref()], bump = global_config.bump)]
+    pub strategy_vault: Account<'info, TokenAccount>,
 
     #[account(seeds = [GLOBAL_CONFIG_SEED.as_bytes(), admin.key().as_ref()], bump = global_config.bump, has_one = admin)]
     pub global_config: Account<'info, GlobalConfig>,
 
-    #[account(mut, seeds = [TREASURY_VAULT_SEED.as_bytes(), admin.key().as_ref()], bump = treasury_vault.bump)]
+    #[account(seeds = [TREASURY_VAULT_SEED.as_bytes(), global_config.key().as_ref()], bump = treasury_vault.bump)]
     pub treasury_vault: Account<'info, TreasuryVault>,
 
     #[account(
@@ -64,7 +69,7 @@ pub struct WithdrawDepositTreasury<'info> {
 }
 
 
-impl<'info> WithdrawDepositTreasury<'info> {
+impl<'info> DepositToTreasury<'info> {
 
     pub fn lamport_transfer_checked(&self, is_withdraw: bool, amount: u64) -> Result<()> {
         require_keys_eq!(
@@ -115,17 +120,14 @@ impl<'info> WithdrawDepositTreasury<'info> {
     }
 
     pub fn token_transfer_checked(&self, is_withdraw: bool, mint: Pubkey, amount: u64) -> Result<()> {
-        require_keys_eq!(
-            self.admin.key(),
-            self.global_config.admin,
-            NyxWeaveError::UnAuthorizedAdminWithdraw
-        );
 
         let (vault_ata, admin_ata, mint_account) = self.select_accounts(mint)?;
 
-        
+        let global_config_key = self.global_config.key();
+
         let signer_seeds: &[&[&[u8]]] = &[&[
             TREASURY_VAULT_SEED.as_bytes(),
+            global_config_key.as_ref(),
             &[self.treasury_vault.bump],
         ]];
 
@@ -185,11 +187,11 @@ impl<'info> WithdrawDepositTreasury<'info> {
         &Account<'info, Mint>,
     )> {
         if mint == self.usdc_mint.key() {
-            Ok((&self.treasury_vault_usdc_ata, &self.admin_usdc_ata, &self.usdc_mint))
+            Ok((&self.treasury_vault_usdc_ata, &self.vault_usdc_ata, &self.usdc_mint))
         } else if mint == self.wsol_mint.key() {
-            Ok((&self.treasury_vault_wsol_ata, &self.admin_wsol_ata, &self.wsol_mint))
+            Ok((&self.treasury_vault_wsol_ata, &self.vault_wsol_ata, &self.wsol_mint))
         } else if mint == self.jito_mint.key() {
-            Ok((&self.treasury_vault_jito_ata, &self.admin_jito_ata, &self.jito_mint))
+            Ok((&self.treasury_vault_jito_ata, &self.vault_jito_ata, &self.jito_mint))
         } else {
             err!(NyxWeaveError::InvalidMint)
         }

@@ -6,7 +6,9 @@
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1"
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/kit": "^2.1.1",
+    "@solana/spl-token": "^0.4.13"
   },
   "devDependencies": {
     "@codama/nodes-from-anchor": "^1.2.0",
