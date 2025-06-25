@@ -697,4 +697,23 @@ describe("Intra-Pool Arbitrage Platform", () => {
     console.log("Note: In a real scenario, if the strategy vault is delegated (is_delegated = true), the withdrawal would fail with VaultInDelegation error.");
     console.log("This test is a placeholder for that scenario, as we can't directly modify the vault state.");
   });
+
+  it("TEST 6.1: User claiming profit from treasury vault", async () => {
+
+    //transfer usdc tokens into treasury
+  })
+
+  it("TEST 6.2: unauthorized user attempting to claim profit", async () => {
+  })
+
+  it("TEST 6.3: User claiming profit from treasury vault with insufficient funds", async () => {
+  })
+
+  it("TEST 6.4: User claiming profit from treasury vault with multiple strategy vaults", async () => {
+  })
+
+  it("TEST 6.5: Users claiming profit from treasury vault from same strategy vault", async () => {
+  })
+
+
 });

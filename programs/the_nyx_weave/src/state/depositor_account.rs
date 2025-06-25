@@ -14,10 +14,15 @@ pub struct DepositorAccount {
     /// Total amount of tokens deposited by this user
     /// Tracks the user's total contribution to the strategy
     pub total_amount_deposited: u64,
+
+    /// Total amount of profits accumulated for this user
+    /// Tracks the user's total profits from the strategy
+    pub net_profit: u64,
     
     /// Timestamp of the user's most recent deposit
     /// Useful for analytics and time-based features
     pub last_deposit_time: i64,
+
     
     /// This account's bump seed for PDA verification
     pub depositor_bump: u8,

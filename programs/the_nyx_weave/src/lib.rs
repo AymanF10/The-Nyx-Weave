@@ -72,4 +72,10 @@ pub mod the_nyx_weave {
         Ok(())
     }
 
+    pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
+        instructions::claim_profit(ctx)?;
+     
+        Ok(())
+    }
+
 }
