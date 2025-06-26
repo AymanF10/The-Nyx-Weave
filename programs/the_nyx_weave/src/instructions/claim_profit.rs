@@ -93,47 +93,7 @@ let signer_seeds: &[&[&[u8]]] = &[treasury_vault_authority_seeds];
 }
 
 
-// transfer profits from strategy vault to treasury vault, decide on delegation or later
-pub fn transfer_profit(ctx: Context<ClaimProfit>, risk_level: u8, user_swap_profit: u64) -> Result<()> {
 
-    let strategy_vault_info = &mut ctx.accounts.strategy_vault;
-    let depositor_account = &mut ctx.accounts.depositor_account;
-
-    depositor_account.net_profit = depositor_account.net_profit.checked_add(user_swap_profit).ok_or(ErrorCode::ArithmeticOverflow)?;
-
-
-    let vault_authority_seeds = &[
-        b"strategy_vault",
-        strategy_vault_info.deposit_token_mint.as_ref(),
-        &risk_level.to_be_bytes(),
-        &[strategy_vault_info.strategy_vault_bump],
-    ];
-    
-    transfer_checked(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            TransferChecked {
-                from: ctx.accounts.strategy_vault_token_account.to_account_info(),
-                to: ctx.accounts.treasury_vault_token_account.to_account_info(),
-                authority: strategy_vault_info.to_account_info(),
-                mint: ctx.accounts.deposit_token.to_account_info(),
-            },
-            &[vault_authority_seeds],
-        ),
-        user_swap_profit,
-        ctx.accounts.deposit_token.decimals,
-    )?;
-
-    emit!(ProfitTransferredEvent {
-        depositor: ctx.accounts.depositor.key(),
-        deposit_token: ctx.accounts.deposit_token.key(),
-        amount: user_swap_profit,
-        timestamp: Clock::get()?.unix_timestamp,
-    });
-
-
-    return Ok(());
-}
 
 #[event]
 pub struct ProfitClaimedEvent {
@@ -143,10 +103,3 @@ pub struct ProfitClaimedEvent {
     pub timestamp: i64,
 }
 
-#[event]
-pub struct ProfitTransferredEvent {
-    pub depositor: Pubkey,
-    pub deposit_token: Pubkey,
-    pub amount: u64,
-    pub timestamp: i64,
-}

@@ -78,4 +78,12 @@ pub mod the_nyx_weave {
         Ok(())
     }
 
+    /// Execute an arbitrage operation for a given risk level
+    /// This will transfer the profit from the strategy vault to the treasury vault
+    /// and update the depositor account with the new profit
+    pub fn execute_arbitrage(ctx: Context<ExecuteArbitrage>, risk_level: u8) -> Result<()> {
+        instructions::execute_arbitrage(ctx, risk_level)?;
+        Ok(())
+    }
+
 }

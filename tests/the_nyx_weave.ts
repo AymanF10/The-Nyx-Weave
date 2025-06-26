@@ -13,6 +13,7 @@ import {
 } from "@solana/spl-token";
 import { expect, assert } from "chai";
 import { publicKey } from "@coral-xyz/anchor/dist/cjs/utils";
+import { createFakeDepositorAccount } from "./deposit-test-helper";
 
 describe("Intra-Pool Arbitrage Platform", () => {
   // Configure the client to use the local cluster.
@@ -700,10 +701,44 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 6.1: User claiming profit from treasury vault", async () => {
 
+    const [treasuryVaultPDA, treasuryVaulBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("treasury_vault")],
+      program.programId
+    );
+
+    const profitAmount = 500 * 10 ** 6;
+
+    // await mintTo(
+    //   provider.connection,
+    //   newAdmin,
+    //   usdcTokenMint,
+    //   treasuryVaultPDA,
+    //   newAdmin.publicKey,
+    //   profitAmount,
+    //   [newAdmin]
+    // );
+    
+
+    const depositor1AccountPDA = await createFakeDepositorAccount({
+      program,
+      depositor: depositor1.publicKey,
+      mint: usdcTokenMint,
+      netProfit: profitAmount,
+      depositAmount: 100 * 10 ** 6,
+      provider,
+    });
+
+    const depositor1AccountData = await program.account.depositorAccount.fetch(depositor1AccountPDA);
+
+    console.log(depositor1AccountData);
+    // 
+
+
+
     //transfer usdc tokens into treasury
   })
 
-  it("TEST 6.2: unauthorized user attempting to claim profit", async () => {
+  it("TEST 6.2: User with no profit attempting to claim profit", async () => {
   })
 
   it("TEST 6.3: User claiming profit from treasury vault with insufficient funds", async () => {
