@@ -699,7 +699,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
     console.log("This test is a placeholder for that scenario, as we can't directly modify the vault state.");
   });
 
-  it("TEST 6.1: User claiming profit from treasury vault", async () => {
+  it("TEST 6.1: Execution bot executing arbitrage and User claiming profit from treasury vault", async () => {
 
     const [treasuryVaultPDA, treasuryVaulBump] = PublicKey.findProgramAddressSync(
       [Buffer.from("treasury_vault")],

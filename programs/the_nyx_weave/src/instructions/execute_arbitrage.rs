@@ -18,12 +18,8 @@ pub struct ExecuteArbitrage<'info> {
     #[account(mut)]
     pub depositor_token_account: InterfaceAccount<'info, TokenAccount>,
 
-
     #[account(mut)]
     pub strategy_vault: Account<'info, StrategyVault>,
-
-    #[account(mut)]
-    pub depositor_account: Account<'info, DepositorAccount>,
 
     #[account(
         seeds = [b"treasury_vault"],
@@ -55,9 +51,30 @@ pub struct ExecuteArbitrage<'info> {
 
 
 pub fn execute_arbitrage(ctx: Context<ExecuteArbitrage>, risk_level: u8) -> Result<()> {
+    let profit_generated = 100_000_000;
+    transfer_profit(ctx.accounts, risk_level, profit_generated)?;
 
-    // TODO: get profit from arbitrage, currently hardcoded for testing purposes
-    transfer_profit(ctx, risk_level, 100000000)?;
+    let total_deposits_on_strategy = ctx.accounts.strategy_vault.total_deposits;
+
+    // Iterate over remaining_accounts and treat them as DepositorAccount
+    for acc_info in ctx.remaining_accounts.iter() {
+        let mut depositor_account = Account::<DepositorAccount>::try_from(&acc_info)?;
+
+        let share = depositor_account
+            .total_amount_deposited
+            .checked_mul(profit_generated)
+            .ok_or(ErrorCode::ArithmeticOverflow)?
+            .checked_div(total_deposits_on_strategy)
+            .ok_or(ErrorCode::ArithmeticOverflow)?;
+
+        depositor_account.net_profit = depositor_account
+            .net_profit
+            .checked_add(share)
+            .ok_or(ErrorCode::ArithmeticOverflow)?;
+
+        depositor_account.exit(&crate::ID)?; // Persist changes
+    }
+
     Ok(())
 }
 
@@ -66,10 +83,6 @@ pub fn execute_arbitrage(ctx: Context<ExecuteArbitrage>, risk_level: u8) -> Resu
 pub fn transfer_profit(ctx: Context<ExecuteArbitrage>, risk_level: u8, user_swap_profit: u64) -> Result<()> {
 
     let strategy_vault_info = &mut ctx.accounts.strategy_vault;
-    let depositor_account = &mut ctx.accounts.depositor_account;
-
-    depositor_account.net_profit = depositor_account.net_profit.checked_add(user_swap_profit).ok_or(ErrorCode::ArithmeticOverflow)?;
-
 
     let vault_authority_seeds = &[
         b"strategy_vault",

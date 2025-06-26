@@ -22,7 +22,6 @@ pub struct ClaimProfit<'info> {
     #[account(mut)]
     pub depositor_token_account: InterfaceAccount<'info, TokenAccount>,
 
-
     #[account(mut)]
     pub strategy_vault: Account<'info, StrategyVault>,
 
@@ -66,13 +65,15 @@ pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
     let token_program = &mut ctx.accounts.token_program;
     let treasury_vault_bump = treasury_vault.treasury_vault_bump;
     let depositor_account = &mut ctx.accounts.depositor_account;
+    let strategy_vault = &mut ctx.accounts.strategy_vault;
 
     let treasury_vault_authority_seeds: &[&[u8]] = &[
     b"treasury_vault",
     &[treasury_vault_bump],
     ];
 
-let signer_seeds: &[&[&[u8]]] = &[treasury_vault_authority_seeds];
+
+    let signer_seeds: &[&[&[u8]]] = &[treasury_vault_authority_seeds];
 
     transfer_checked(
         CpiContext::new_with_signer(
