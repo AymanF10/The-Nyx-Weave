@@ -8,6 +8,15 @@
       "isPartialFill": false,
       "maxExtraBinArrays": 3,
       "decimals": 6
+    },    
+    {
+      "name": "SOL-mSOL",
+      "address": "HcjZvfeSNJbNkfLD4eEcRBr96AD3w1GpmMppaeRZf7ur",
+      "swapAmount": 5000000,
+      "swapYtoX": true,
+      "isPartialFill": false,
+      "maxExtraBinArrays": 3,
+      "decimals": 6
     }
   ],
   "scheduler": {
