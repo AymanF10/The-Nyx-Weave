@@ -1,0 +1,6 @@
+{"level":"error","message":"Error getting price quote for SOL-USDT: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.819Z"}
+{"level":"error","message":"Error getting price quote for USDC-USDT: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.821Z"}
+{"level":"error","message":"Error getting price quote for RAY-USDC: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.822Z"}
+{"level":"error","message":"SOL-USDT: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"error","message":"USDC-USDT: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"error","message":"RAY-USDC: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}

@@ -18,3 +18,54 @@
 {"level":"info","message":"SOL-USDT: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:43:54.870Z"}
 {"level":"info","message":"USDC-USDT: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:43:54.870Z"}
 {"level":"info","message":"RAY-USDC: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:43:54.870Z"}
+{"level":"info","message":"Executing price quotes once...","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.491Z"}
+{"level":"info","message":"Loading configuration from: /Users/liam/dev/magicblock/The-Nyx-Weave/ts-backend/config/pools.json","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.493Z"}
+{"level":"info","message":"Configuration loaded successfully with 4 pools","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.495Z"}
+{"level":"info","message":"Scheduler configured with: Every 30 seconds","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.495Z"}
+{"level":"info","message":"Executing price quotes once (manual trigger)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.496Z"}
+{"level":"info","message":"Getting price quotes for 4 pools","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.496Z"}
+{"level":"info","message":"Getting price quote for pool: SOL-USDC","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.496Z"}
+{"level":"info","message":"Getting price quote for pool: SOL-USDT","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.496Z"}
+{"level":"info","message":"Getting price quote for pool: USDC-USDT","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.496Z"}
+{"level":"info","message":"Getting price quote for pool: RAY-USDC","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.496Z"}
+{"level":"info","message":"Price quote for SOL-USDC: 0.95 (1ms)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.497Z"}
+{"level":"info","message":"Price quote for SOL-USDT: 0.95 (2ms)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"Price quote for USDC-USDT: 0.95 (2ms)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"Price quote for RAY-USDC: 0.95 (2ms)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"Completed price quotes: 4/4 successful","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"Executed 4 price quotes","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"SOL-USDC: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"SOL-USDT: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"USDC-USDT: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.498Z"}
+{"level":"info","message":"RAY-USDC: 0.95","service":"price-quote-scheduler","timestamp":"2025-07-01T16:47:00.499Z"}
+{"level":"info","message":"Executing price quotes once...","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.646Z"}
+{"level":"info","message":"Loading configuration from: /Users/liam/dev/magicblock/The-Nyx-Weave/ts-backend/config/pools.json","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.648Z"}
+{"level":"info","message":"Configuration loaded successfully with 4 pools","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.650Z"}
+{"level":"info","message":"Scheduler configured with: Every 30 seconds","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.650Z"}
+{"level":"info","message":"Executing price quotes once (manual trigger)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.651Z"}
+{"level":"info","message":"Getting price quotes for 4 pools","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.651Z"}
+{"level":"info","message":"Getting price quote for pool: SOL-USDC","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.651Z"}
+{"level":"info","message":"Getting price quote for pool: SOL-USDT","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.680Z"}
+{"level":"info","message":"Getting price quote for pool: USDC-USDT","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.688Z"}
+{"level":"info","message":"Getting price quote for pool: RAY-USDC","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.693Z"}
+{"level":"error","message":"Error getting price quote for SOL-USDT: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.819Z"}
+{"level":"error","message":"Error getting price quote for USDC-USDT: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.821Z"}
+{"level":"error","message":"Error getting price quote for RAY-USDC: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.822Z"}
+{"level":"info","message":"Price quote for SOL-USDC: 0.1477824 (239ms)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.890Z"}
+{"level":"info","message":"Completed price quotes: 1/4 successful","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"info","message":"Executed 4 price quotes","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"info","message":"SOL-USDC: 0.1477824","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"error","message":"SOL-USDT: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"error","message":"USDC-USDT: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"error","message":"RAY-USDC: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T16:51:43.891Z"}
+{"level":"info","message":"Executing price quotes once...","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.101Z"}
+{"level":"info","message":"Loading configuration from: /Users/liam/dev/magicblock/The-Nyx-Weave/ts-backend/config/pools.json","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.103Z"}
+{"level":"info","message":"Configuration loaded successfully with 1 pools","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.104Z"}
+{"level":"info","message":"Scheduler configured with: Every 30 seconds","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.104Z"}
+{"level":"info","message":"Executing price quotes once (manual trigger)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.105Z"}
+{"level":"info","message":"Getting price quotes for 1 pools","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.105Z"}
+{"level":"info","message":"Getting price quote for pool: USDT-USDC","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.105Z"}
+{"level":"info","message":"Price quote for USDT-USDC: 0.9996 (271ms)","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.376Z"}
+{"level":"info","message":"Completed price quotes: 1/1 successful","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.376Z"}
+{"level":"info","message":"Executed 1 price quotes","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.376Z"}
+{"level":"info","message":"USDT-USDC: 0.9996","service":"price-quote-scheduler","timestamp":"2025-07-01T16:54:32.377Z"}

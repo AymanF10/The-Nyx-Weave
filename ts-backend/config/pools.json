@@ -1,36 +1,9 @@
 {
   "pools": [
     {
-      "name": "SOL-USDC",
-      "address": "5BKxfWMbmYBAEWvyPZS9esPducUba9GqyMjtLCfbaqyF",
+      "name": "USDT-USDC",
+      "address": "ARwi1S4DaiTG5DX7S4M4ZsrXqpMD1MrTmbu9ue2tpmEq",
       "swapAmount": 5000000,
-      "swapYtoX": true,
-      "isPartialFill": false,
-      "maxExtraBinArrays": 3,
-      "decimals": 6
-    },
-    {
-      "name": "SOL-USDT",
-      "address": "7qbRF6YsyGuLUVs6Y1q64bdVrfe4ZcUUz1JRdoVNUJnm",
-      "swapAmount": 5000000,
-      "swapYtoX": true,
-      "isPartialFill": false,
-      "maxExtraBinArrays": 3,
-      "decimals": 6
-    },
-    {
-      "name": "USDC-USDT",
-      "address": "8HoQnePLqPj4M7PUDzfw8e3Ymdwgc7NLGnaTUapubyvu",
-      "swapAmount": 1000000,
-      "swapYtoX": false,
-      "isPartialFill": false,
-      "maxExtraBinArrays": 2,
-      "decimals": 6
-    },
-    {
-      "name": "RAY-USDC",
-      "address": "6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg",
-      "swapAmount": 1000000,
       "swapYtoX": true,
       "isPartialFill": false,
       "maxExtraBinArrays": 3,

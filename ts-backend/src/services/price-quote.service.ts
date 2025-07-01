@@ -2,38 +2,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { PoolConfig, PriceQuote, RpcConfig } from "../types";
 import { logger } from "../utils/logger";
-
-// Mock DLMM class - you'll need to replace this with the actual DLMM import
-class DLMM {
-  static async create(connection: Connection, poolAddress: PublicKey, options: { cluster: string }) {
-    // This is a mock implementation - replace with actual DLMM import
-    return new DLMM(connection, poolAddress);
-  }
-
-  constructor(private connection: Connection, private poolAddress: PublicKey) {}
-
-  async getBinArrayForSwap(swapYtoX: boolean) {
-    // Mock implementation - replace with actual method
-    return [];
-  }
-
-  swapQuote(
-    swapAmount: BN,
-    swapYtoX: boolean,
-    slippage: BN,
-    binArrays: any[],
-    isPartialFill: boolean,
-    maxExtraBinArrays: number
-  ) {
-    // Mock implementation - replace with actual method
-    return {
-      consumedInAmount: new BN(swapAmount),
-      outAmount: new BN(swapAmount.mul(new BN(95)).div(new BN(100))), // 5% slippage mock
-      feeAmount: new BN(0),
-      binArrays: []
-    };
-  }
-}
+import DLMM from '@meteora-ag/dlmm'
 
 export class PriceQuoteService {
   private connection: Connection;
