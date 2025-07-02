@@ -10,3 +10,11 @@
 {"level":"error","message":"wsol-msol: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T17:01:22.213Z"}
 {"level":"error","message":"Error getting price quote for SOL-mSOL: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T17:02:07.915Z"}
 {"level":"error","message":"SOL-mSOL: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T17:02:08.029Z"}
+{"level":"error","message":"Error getting price quote for SOL-mSOL: Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T21:52:48.722Z"}
+{"level":"error","message":"SOL-mSOL: Failed - Invalid account discriminator","service":"price-quote-scheduler","timestamp":"2025-07-01T21:52:48.810Z"}
+{"level":"error","message":"Error getting price quote for SOL-mSOL: Insufficient liquidity in binArrays for swapQuote","service":"price-quote-scheduler","timestamp":"2025-07-01T21:54:07.781Z"}
+{"level":"error","message":"SOL-mSOL: Failed - Insufficient liquidity in binArrays for swapQuote","service":"price-quote-scheduler","timestamp":"2025-07-01T21:54:07.791Z"}
+{"level":"error","message":"Error getting price quote for SOL-mSOL: Insufficient liquidity in binArrays for swapQuote","service":"price-quote-scheduler","timestamp":"2025-07-01T21:58:41.277Z"}
+{"level":"error","message":"SOL-mSOL: Failed - Insufficient liquidity in binArrays for swapQuote","service":"price-quote-scheduler","timestamp":"2025-07-01T21:58:41.289Z"}
+{"level":"error","message":"Error getting price quote for SOL-mSOL: maxExtraBinArrays must be a value between 0 and 3","service":"price-quote-scheduler","timestamp":"2025-07-01T22:06:14.008Z"}
+{"level":"error","message":"SOL-mSOL: Failed - maxExtraBinArrays must be a value between 0 and 3","service":"price-quote-scheduler","timestamp":"2025-07-01T22:06:14.009Z"}
