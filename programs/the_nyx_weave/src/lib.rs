@@ -16,6 +16,7 @@ pub use error::*;
 
 declare_id!("2N1TRSvQTNxH52mhqbgn3XShtXZuPQoaAk1puGw2uJeF");
 
+#[ephemeral]
 #[program]
 pub mod the_nyx_weave {
     use super::*;
@@ -62,6 +63,12 @@ pub mod the_nyx_weave {
     pub fn user_deposit(ctx: Context<UserDeposit>, risk_level: u8, amount: u64) -> Result<()> {
         instructions::create_deposit(ctx, risk_level, amount)?;
 
+        Ok(())
+    }
+
+    // DELEGATE STRATEGY VAULT TO THE ER
+    pub fn delegate_strategy(ctx: Context<DelegateArbitrage>, token: Pubkey, risk_level: u8) -> Result<()> {
+        ctx.accounts.delegate_strategy(token, risk_level)?;
         Ok(())
     }
 
