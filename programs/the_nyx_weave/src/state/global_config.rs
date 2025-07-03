@@ -17,7 +17,7 @@ pub struct GlobalConfig {
     /// Maximum number of transaction retry attempts
     /// Provides configurable resilience for trade execution
     pub max_retries: u8,
-    
+
     /// Minimum profit threshold for executing trades
     /// Prevents executing trades with negligible returns
     pub min_profit_threshold: u64,

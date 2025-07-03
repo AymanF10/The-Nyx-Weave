@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken ,token_interface::{Mint, TokenAccount, TokenInterface}};
 
-use crate::state::{GlobalConfig, StrategyVault, Administrator};
+use crate::{state::{Administrator, GlobalConfig, StrategyVault}, TreasuryVault};
 use crate::error::ErrorCode;
 
 /// Accounts required for creating a new trading strategy
@@ -58,7 +58,23 @@ pub struct CreateStrategy<'info> {
         associated_token::mint = deposit_token_mint,
         associated_token::authority = strategy_vault,
     )]
-    pub vault_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub strategy_vault_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        seeds = [b"treasury_vault"],
+        bump,
+    )]
+    pub treasury_vault: Account<'info, TreasuryVault>,
+
+    /// The token account owned by the treasury vault
+    /// Holds profit tokens for trading
+    #[account(
+        init,
+        payer = admin,
+        associated_token::mint = deposit_token_mint,
+        associated_token::authority = treasury_vault,
+    )]
+    pub treasury_vault_token_account: InterfaceAccount<'info, TokenAccount>,
 
     /// Required for token operations
     pub token_program: Interface<'info, TokenInterface>,

@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
+    associated_token::AssociatedToken,
 token_interface::{Mint, TokenAccount, TransferChecked, transfer_checked, TokenInterface}
 };
-use crate::state::{DepositorAccount, GlobalConfig,  StrategyVault, TreasuryVault};
+use crate::state::{StrategyVault, TreasuryVault};
 use crate::error::ErrorCode;
 
 #[derive(Accounts)]
@@ -13,9 +14,6 @@ pub struct ExecuteArbitrageMock<'info> {
 
     #[account(mut)]
     pub profit_token: InterfaceAccount<'info, Mint>,
-
-    #[account(mut)]
-    pub depositor_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut)]
     pub strategy_vault: Account<'info, StrategyVault>,
@@ -47,9 +45,8 @@ pub struct ExecuteArbitrageMock<'info> {
         constraint = strategy_vault_token_account.owner == strategy_vault.key() @ ErrorCode::InvalidOwner,
     )]
     pub strategy_vault_token_account: InterfaceAccount<'info, TokenAccount>,
-   
-    #[account(mut)]
-    pub global_config: Account<'info, GlobalConfig>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
 
     pub token_program: Interface<'info, TokenInterface>,
 

@@ -32,6 +32,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
   const newAdmin = anchor.web3.Keypair.generate();
   const depositor1 = anchor.web3.Keypair.generate();
   const unauthorizedUser = anchor.web3.Keypair.generate();
+  const ammWallet = anchor.web3.Keypair.generate();
 
 
   async function airdropSol(provider, publicKey, amountSol) {
@@ -53,7 +54,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
   }
 
   before(async () => {
-    await setupActors(provider, [newAdmin.publicKey, depositor1.publicKey, unauthorizedUser.publicKey], 5);
+    await setupActors(provider, [newAdmin.publicKey, depositor1.publicKey, unauthorizedUser.publicKey, ammWallet.publicKey], 5);
 
     // Mint Creation
     usdcTokenMint = await createMint(
@@ -62,6 +63,24 @@ describe("Intra-Pool Arbitrage Platform", () => {
       newAdmin.publicKey,
       null,
       6,
+    );
+
+    const ammWalletATAaddress = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      ammWallet,
+      usdcTokenMint,
+      ammWallet.publicKey
+    );
+
+    // fund amm wallet
+    await mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      ammWalletATAaddress.address,
+      newAdmin.publicKey,
+      500 * 10 ** 6,
+      [newAdmin]
     );
   });
 
@@ -196,24 +215,9 @@ describe("Intra-Pool Arbitrage Platform", () => {
       program.programId
     );
 
-    const [globalConfigPDA, globalConfigBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config")],
-      program.programId
-    );
-
-    
-
     const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
       [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([1])],
       program.programId
-    );
-
-    const vaultTokenAccount = await getAssociatedTokenAddressSync(
-      usdcTokenMint,
-      strategyVaultPDA,
-      true,
-      TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID
     );
 
     // Call instruction
@@ -221,13 +225,8 @@ describe("Intra-Pool Arbitrage Platform", () => {
       .createStrategy(1)
       .accountsPartial({
         admin: newAdmin.publicKey,
-        //@ts-ignore
         admins: adminPDA,
         depositTokenMint: usdcTokenMint,
-        // @ts-ignore
-        strategyVault: strategyVaultPDA,
-        vaultTokenAccount: vaultTokenAccount,
-        
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -272,13 +271,9 @@ describe("Intra-Pool Arbitrage Platform", () => {
         .createStrategy(riskLevel)
         .accountsPartial({
           admin: unauthorizedUser.publicKey,
-          //@ts-ignore
           admins: adminPDA,
           depositTokenMint: usdcTokenMint,
-          // @ts-ignore
           strategyVault: strategyVaultPDA,
-          vaultTokenAccount: vaultTokenAccount,
-          
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
@@ -326,8 +321,6 @@ describe("Intra-Pool Arbitrage Platform", () => {
           depositTokenMint: usdcTokenMint,
           // @ts-ignore
           strategyVault: strategyVaultPDA,
-          vaultTokenAccount: vaultTokenAccount,
-          
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
@@ -350,7 +343,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
     );
 
     const [depositor1AccountPDA, depositorAccountBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("depositor"), depositor1.publicKey.toBuffer(), usdcTokenMint.toBuffer()],
+      [Buffer.from("depositor"), depositor1.publicKey.toBuffer(), usdcTokenMint.toBuffer(), strategyVaultPDA.toBuffer()],
       program.programId
     );
 
@@ -530,7 +523,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
     );
 
     const [depositor1AccountPDA, depositorAccountBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("depositor"), depositor1.publicKey.toBuffer(), usdcTokenMint.toBuffer()],
+      [Buffer.from("depositor"), depositor1.publicKey.toBuffer(), usdcTokenMint.toBuffer(), strategyVaultPDA.toBuffer()],
       program.programId
     );
 
@@ -701,41 +694,107 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 6.1: Execution bot executing arbitrage and User claiming profit from treasury vault", async () => {
 
-    const [treasuryVaultPDA, treasuryVaulBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("treasury_vault")],
-      program.programId
-    );
-
-    const profitAmount = 500 * 10 ** 6;
-
-    // await mintTo(
-    //   provider.connection,
-    //   newAdmin,
-    //   usdcTokenMint,
-    //   treasuryVaultPDA,
-    //   newAdmin.publicKey,
-    //   profitAmount,
-    //   [newAdmin]
-    // );
+        // Get PDAs
+        const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([1])],
+          program.programId
+        );
     
+        const [depositor1AccountPDA, depositorAccountBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("depositor"), depositor1.publicKey.toBuffer(), usdcTokenMint.toBuffer(), strategyVaultPDA.toBuffer()],
+          program.programId
+        );
 
-    const depositor1AccountPDA = await createFakeDepositorAccount({
-      program,
+
+        const [treasuryVaultPDA, treasuryVaultBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("treasury_vault")],
+          program.programId
+        );
+
+        const treasuryVaultATAaddress = await getAssociatedTokenAddressSync(
+          usdcTokenMint,
+          treasuryVaultPDA,
+          true,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+    
+        const strategyVaultATAaddress = await getAssociatedTokenAddressSync(
+          usdcTokenMint,
+          strategyVaultPDA,
+          true,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+    
+        // create ATA for depositor 1
+        const depositor1ATAaddress = await getOrCreateAssociatedTokenAccount(
+          provider.connection,
+          depositor1,
+          usdcTokenMint,
+          depositor1.publicKey
+        );
+
+        const ammWalletATAaddress = await getOrCreateAssociatedTokenAccount(
+          provider.connection,
+          ammWallet,
+          usdcTokenMint,
+          ammWallet.publicKey
+        );
+        // Mint UsdcToken To Depositor1
+        await mintTo(
+          provider.connection,
+          newAdmin,
+          usdcTokenMint,
+          depositor1ATAaddress.address,
+          newAdmin.publicKey,
+          500 * 10 ** 6,
+          [newAdmin]
+        );
+    
+        // Call instruction
+        await program.methods
+          .userDeposit(1, new BN(400 * 10 ** 6))
+          .accountsPartial({
+            depositor: depositor1.publicKey,
+            depositorTokenAccount: depositor1ATAaddress.address,
+            depositToken: usdcTokenMint,
+            strategyVault: strategyVaultPDA,
+            depositorAccount: depositor1AccountPDA,
+            vaultTokenAccount: strategyVaultATAaddress,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([depositor1])
+          .rpc();
+
+    await program.methods.executeArbitrageMock(1, new BN(50 * 10 ** 6))
+    .accountsPartial({
+      ammWallet: ammWallet.publicKey,
+      ammWalletTokenAccount: ammWalletATAaddress.address,
+      strategyVaultTokenAccount: strategyVaultATAaddress,
+      treasuryVaultTokenAccount: treasuryVaultATAaddress,
+      profitToken: usdcTokenMint,
+      strategyVault: strategyVaultPDA,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([ammWallet])
+    .rpc();
+
+    const strategyVaultData = await program.account.strategyVault.fetch(strategyVaultPDA);
+    expect(strategyVaultData.totalProfit.toNumber()).to.eq(50 * 10 ** 6);
+
+    await program.methods.claimProfit().accountsPartial({
       depositor: depositor1.publicKey,
-      mint: usdcTokenMint,
-      netProfit: profitAmount,
-      depositAmount: 100 * 10 ** 6,
-      provider,
-    });
+      depositorTokenAccount: depositor1ATAaddress.address,
+      depositToken: usdcTokenMint,
+      strategyVault: strategyVaultPDA,
+      depositorAccount: depositor1AccountPDA,
+    })
 
-    const depositor1AccountData = await program.account.depositorAccount.fetch(depositor1AccountPDA);
-
-    console.log(depositor1AccountData);
-    // 
-
-
-
-    //transfer usdc tokens into treasury
   })
 
   it("TEST 6.2: User with no profit attempting to claim profit", async () => {
