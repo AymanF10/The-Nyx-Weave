@@ -80,6 +80,7 @@ pub fn init_strategy(
     let strategy_vault_info = &mut ctx.accounts.strategy_vault;
     strategy_vault_info.set_inner(StrategyVault {
         deposit_token_mint: ctx.accounts.deposit_token_mint.key(),
+        total_profit: 0,
         total_deposits: 0,
         created_at: Clock::get()?.unix_timestamp,
         risk_level,

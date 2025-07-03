@@ -8,8 +8,7 @@ use crate::error::ErrorCode;
 
 
 #[derive(Accounts)]
-
-
+#[instruction(risk_level: u8)]
 //user claims profit from treasury vault
 pub struct ClaimProfit<'info> {
 
@@ -22,17 +21,25 @@ pub struct ClaimProfit<'info> {
     #[account(mut)]
     pub depositor_token_account: InterfaceAccount<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"strategy_vault", deposit_token.key().as_ref(), &risk_level.to_be_bytes()],
+        bump = strategy_vault.strategy_vault_bump,
+        constraint = strategy_vault.deposit_token_mint == deposit_token.key() @ ErrorCode::InvalidMint,
+    )]
     pub strategy_vault: Account<'info, StrategyVault>,
-
-    #[account(mut)]
-    pub depositor_account: Account<'info, DepositorAccount>,
 
     #[account(
         seeds = [b"treasury_vault"],
         bump,
     )]
     pub treasury_vault: Account<'info, TreasuryVault>,
+
+    #[account(
+        seeds = [b"depositor", depositor.key().as_ref(), deposit_token.key().as_ref(), strategy_vault.key().as_ref()],
+        bump,
+    )]
+    pub depositor_account: Account<'info, DepositorAccount>,
 
     #[account(
         mut,
@@ -72,6 +79,10 @@ pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
     &[treasury_vault_bump],
     ];
 
+    // calculate user's share of profit
+    let user_share = strategy_vault.total_deposits.checked_div(depositor_account.total_amount_deposited).ok_or(ErrorCode::ArithmeticOverflow)?;
+
+    let profit_amount = user_share.checked_mul(strategy_vault.total_profit).ok_or(ErrorCode::ArithmeticOverflow)?;
 
     let signer_seeds: &[&[&[u8]]] = &[treasury_vault_authority_seeds];
 
@@ -86,7 +97,7 @@ pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
             },
             signer_seeds,
         ),
-        depositor_account.net_profit,
+        profit_amount,
         deposit_token.decimals,
     )?;
 
