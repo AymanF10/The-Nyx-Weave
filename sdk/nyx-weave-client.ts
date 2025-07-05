@@ -25,7 +25,7 @@ export class NyxClient {
     const idl = await Program.fetchIdl<TheNyxWeave>(config.programId, config.provider);
     if (!idl) throw new Error("Unable to fetch IDL for NyxWeave");
     const program = new Program(idl, config.programId, config.provider);
-    return new NyxClient(config.provider, program);
+    return new NyxClient(config.provider);
   }
 
   constructor(provider: AnchorProvider) {
@@ -108,8 +108,6 @@ export class NyxClient {
       Buffer.from([riskLevel])
     ], this.program.programId);
 
-    const vaultTokenAccount = getAssociatedTokenAddressSync(mint, strategyVaultPDA, true);
-
     await this.program.methods
       .createStrategy(riskLevel)
       .accountsPartial({
@@ -117,7 +115,6 @@ export class NyxClient {
         admins: adminPDA,
         depositTokenMint: mint,
         strategyVault: strategyVaultPDA,
-        vaultTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -145,7 +142,8 @@ export class NyxClient {
     const [depositorPDA] = PublicKey.findProgramAddressSync([
       Buffer.from("depositor"),
       depositor.publicKey.toBuffer(),
-      mint.toBuffer()
+      mint.toBuffer(),
+      strategyVaultPDA.toBuffer()
     ], this.program.programId);
 
     const depositorATA = getAssociatedTokenAddressSync(mint, depositor.publicKey);
@@ -178,7 +176,8 @@ export class NyxClient {
     const [depositorPDA] = PublicKey.findProgramAddressSync([
       Buffer.from("depositor"),
       depositor.publicKey.toBuffer(),
-      mint.toBuffer()
+      mint.toBuffer(),
+      strategyVaultPDA.toBuffer()
     ], this.program.programId);
 
     const depositorATA = getAssociatedTokenAddressSync(mint, depositor.publicKey);
@@ -201,12 +200,121 @@ export class NyxClient {
       .rpc();
   }
 
-  async getDepositorAccount(depositor: PublicKey, mint: PublicKey) {
+  async getDepositorAccount(depositor: PublicKey, mint: PublicKey, strategyVault: PublicKey) {
     const [depositorPDA] = PublicKey.findProgramAddressSync([
       Buffer.from("depositor"),
       depositor.toBuffer(),
-      mint.toBuffer()
+      mint.toBuffer(),
+      strategyVault.toBuffer()
     ], this.program.programId);
     return await this.program.account.depositorAccount.fetch(depositorPDA);
+  }
+
+  async executeArbitrageMock({ 
+    ammWallet, 
+    mint, 
+    riskLevel, 
+    amount 
+  }: { 
+    ammWallet: Keypair; 
+    mint: PublicKey; 
+    riskLevel: number; 
+    amount: number; 
+  }) {
+    const [strategyVaultPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("strategy_vault"),
+      mint.toBuffer(),
+      Buffer.from([riskLevel])
+    ], this.program.programId);
+
+    const [treasuryVaultPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("treasury_vault")
+    ], this.program.programId);
+
+    const ammWalletATA = getAssociatedTokenAddressSync(mint, ammWallet.publicKey);
+    const strategyVaultATA = getAssociatedTokenAddressSync(mint, strategyVaultPDA, true);
+    const treasuryVaultATA = getAssociatedTokenAddressSync(mint, treasuryVaultPDA, true);
+
+    await this.program.methods
+      .executeArbitrageMock(riskLevel, new BN(amount))
+      .accountsPartial({
+        ammWallet: ammWallet.publicKey,
+        ammWalletTokenAccount: ammWalletATA,
+        strategyVaultTokenAccount: strategyVaultATA,
+        treasuryVaultTokenAccount: treasuryVaultATA,
+        profitToken: mint,
+        strategyVault: strategyVaultPDA,
+        treasuryVault: treasuryVaultPDA,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([ammWallet])
+      .rpc();
+  }
+
+  async claimProfit({ 
+    depositor, 
+    mint, 
+    riskLevel 
+  }: { 
+    depositor: Keypair; 
+    mint: PublicKey; 
+    riskLevel: number; 
+  }) {
+    const [strategyVaultPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("strategy_vault"),
+      mint.toBuffer(),
+      Buffer.from([riskLevel])
+    ], this.program.programId);
+
+    const [treasuryVaultPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("treasury_vault")
+    ], this.program.programId);
+
+    const [globalConfigPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("global_config")
+    ], this.program.programId);
+
+    const [depositorPDA] = PublicKey.findProgramAddressSync([
+      Buffer.from("depositor"),
+      depositor.publicKey.toBuffer(),
+      mint.toBuffer(),
+      strategyVaultPDA.toBuffer()
+    ], this.program.programId);
+
+    const depositorATA = getAssociatedTokenAddressSync(mint, depositor.publicKey);
+    const treasuryVaultATA = getAssociatedTokenAddressSync(mint, treasuryVaultPDA, true);
+    const strategyVaultATA = getAssociatedTokenAddressSync(mint, strategyVaultPDA, true);
+
+    console.log("depositorATA", depositorATA);
+    console.log("treasuryVaultATA", treasuryVaultATA);
+    console.log("strategyVaultATA", strategyVaultATA);
+    console.log("depositorPDA", depositorPDA);
+    console.log("globalConfigPDA", globalConfigPDA);
+    console.log("strategyVaultPDA", strategyVaultPDA);
+    console.log("treasuryVaultPDA", treasuryVaultPDA);
+    console.log("depositor", depositor.publicKey);
+    console.log("mint", mint);
+    console.log("riskLevel", riskLevel);
+    console.log("depositor", depositor.publicKey);
+    
+    await this.program.methods
+      .claimProfit()
+      .accountsPartial({
+        depositor: depositor.publicKey,
+        depositorTokenAccount: depositorATA,
+        depositToken: mint,
+        strategyVault: strategyVaultPDA,
+        treasuryVault: treasuryVaultPDA,
+        depositorAccount: depositorPDA,
+        treasuryVaultTokenAccount: treasuryVaultATA,
+        strategyVaultTokenAccount: strategyVaultATA,
+        globalConfig: globalConfigPDA,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([depositor])
+      .rpc();
   }
 }
