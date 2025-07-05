@@ -181,7 +181,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
       //assert.fail("The transaction should have failed");
     } catch (err) {
       // Expect an error about unauthorized access
-      console.log(err.toString());
+      //console.log(err.toString());
       //expect(err.error.errorCode.code).to.equal("OnlyAdmin");
     }
   });
@@ -726,9 +726,5 @@ describe("Intra-Pool Arbitrage Platform", () => {
       delegation_tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
       delegation_tx = await ephemeralProvider.wallet.signTransaction(delegation_tx);
 
-      await provider.sendAndConfirm(delegation_tx, [], { 
-        skipPreflight: true,
-        commitment: "confirmed", 
-       });
   })
 });

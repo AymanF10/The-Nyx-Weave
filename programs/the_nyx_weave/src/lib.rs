@@ -14,7 +14,7 @@ pub use state::*;
 pub use instructions::*;
 pub use error::*;
 
-declare_id!("2N1TRSvQTNxH52mhqbgn3XShtXZuPQoaAk1puGw2uJeF");
+declare_id!("9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz");
 
 #[ephemeral]
 #[program]
