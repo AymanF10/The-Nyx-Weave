@@ -108,5 +108,10 @@ pub enum ErrorCode {
     /// Prevents operations that violate state transition rules
     #[msg("Operation not allowed in current state")]
     OperationNotAllowed,
+
+    /// Error when a vault is in an invalid state
+    /// Prevents operations on invalid vault states
+    #[msg("Vault is in an invalid state")]
+    InvalidVaultState,
 }
 
