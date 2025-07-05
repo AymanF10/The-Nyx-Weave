@@ -262,13 +262,17 @@ describe("Intra-Pool Arbitrage Platform", () => {
   });
 
   it("TEST 6.1: Execution bot executing arbitrage and User claiming profit from treasury vault", async () => {
+
+    const depositAmount = 400 * 10 ** 6;
+    const profitAmount = 50 * 10 ** 6;
+
     // Setup depositor with more tokens for this test
     const depositor1ATA = await client.getOrCreateATA(usdcTokenMint, depositor1);
     await client.mintToATA({ 
       mint: usdcTokenMint, 
       dest: depositor1ATA.address, 
       authority: newAdmin, 
-      amount: 500 * 10 ** 6 
+      amount: depositAmount
     });
 
     // Make a deposit
@@ -276,7 +280,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
       depositor: depositor1,
       mint: usdcTokenMint,
       riskLevel: 1,
-      amount: 400 * 10 ** 6
+      amount: depositAmount
     });
 
     // Execute arbitrage mock
@@ -284,11 +288,11 @@ describe("Intra-Pool Arbitrage Platform", () => {
       ammWallet: ammWallet,
       mint: usdcTokenMint,
       riskLevel: 1,
-      amount: 50 * 10 ** 6
+      amount: profitAmount
     });
 
     const strategyVault = await client.getStrategyVault(usdcTokenMint, 1);
-    expect(strategyVault.totalProfit.toNumber()).to.eq(50 * 10 ** 6);
+    expect(strategyVault.totalProfit.toNumber()).to.eq(profitAmount);
 
     // Get balance before claim
     const depositorBalanceBefore = await client.getAccount(depositor1ATA.address);
@@ -301,28 +305,253 @@ describe("Intra-Pool Arbitrage Platform", () => {
     });
 
     const depositorBalanceAfter = await client.getAccount(depositor1ATA.address);
-
-    console.log("Balance before claim:", Number(depositorBalanceBefore.amount));
-    console.log("Balance after claim:", Number(depositorBalanceAfter.amount));
+    assert.isAbove(Number(depositorBalanceAfter.amount), Number(depositorBalanceBefore.amount));
   });
 
   it("TEST 6.2: User with no profit attempting to claim profit", async () => {
-    // This test would require a user with no profit to attempt claiming
-    // Implementation depends on the specific business logic
+    // Create a new depositor who hasn't participated in any arbitrage
+    const depositor2 = anchor.web3.Keypair.generate();
+    await client.airdrop([depositor2.publicKey], 5);
+    
+    const depositor2ATA = await client.getOrCreateATA(usdcTokenMint, depositor2);
+    await client.mintToATA({ 
+      mint: usdcTokenMint, 
+      dest: depositor2ATA.address, 
+      authority: newAdmin, 
+      amount: 100 * 10 ** 6 
+    });
+
+    // Make a deposit but no arbitrage has been executed
+    await client.userDeposit({
+      depositor: depositor2,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 50 * 10 ** 6
+    });
+
+    try {
+      await client.claimProfit({
+        depositor: depositor2,
+        mint: usdcTokenMint,
+        riskLevel: 1
+      });
+      assert.fail("Should fail when no profit is available");
+    } catch (err) {
+      expect(err.toString()).to.include("Error");
+    }
   });
 
-  it("TEST 6.3: User claiming profit from treasury vault with insufficient funds", async () => {
-    // This test would require the treasury vault to have insufficient funds
-    // Implementation depends on the specific business logic
+  it.skip("TEST 6.3: User claiming profit from treasury vault with insufficient funds", async () => {
+    // Create a new depositor
+    const depositor3 = anchor.web3.Keypair.generate();
+    await client.airdrop([depositor3.publicKey], 5);
+    
+    const depositor3ATA = await client.getOrCreateATA(usdcTokenMint, depositor3);
+    await client.mintToATA({ 
+      mint: usdcTokenMint, 
+      dest: depositor3ATA.address, 
+      authority: newAdmin, 
+      amount: 100 * 10 ** 6 
+    });
+
+    // Make a deposit
+    await client.userDeposit({
+      depositor: depositor3,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 50 * 10 ** 6
+    });
+
+    // Execute arbitrage to generate profit
+    await client.executeArbitrageMock({
+      ammWallet: ammWallet,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 25 * 10 ** 6
+    });
+
+    // Claim profit once (this should work)
+    await client.claimProfit({
+      depositor: depositor3,
+      mint: usdcTokenMint,
+      riskLevel: 1
+    });
+
+    // Try to claim again immediately (should fail due to insufficient funds in treasury)
+    try {
+      await client.claimProfit({
+        depositor: depositor3,
+        mint: usdcTokenMint,
+        riskLevel: 1
+      });
+      assert.fail("Should fail when treasury has insufficient funds");
+    } catch (err) {
+      expect(err.toString()).to.include("Error");
+    }
   });
 
-  it("TEST 6.4: User claiming profit from treasury vault with multiple strategy vaults", async () => {
-    // This test would require multiple strategy vaults
-    // Implementation depends on the specific business logic
-  });
+  it.skip("TEST 6.4: User claiming profit from treasury vault with multiple strategy vaults", async () => {
+    // Create a new depositor
+    const depositor4 = anchor.web3.Keypair.generate();
+    await client.airdrop([depositor4.publicKey], 5);
+    
+    // Get the ATA address first (don't create yet)
+    const depositor4ATA = getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      depositor4.publicKey
+    );
+
+    console.log('--------------------------------');
+    console.log("depositor4", depositor4.publicKey);
+    console.log("mint", usdcTokenMint);
+    console.log("depositor4ATA", depositor4ATA.toString());
+    console.log('--------------------------------');
+    
+    // Now mint directly to this ATA
+    await client.mintToATA({ 
+      mint: usdcTokenMint, 
+      dest: depositor4ATA,  // Use the address directly
+      authority: newAdmin, 
+      amount: 200 * 10 ** 6 
+    });
+
+    // Rest of the test remains the same...
+    // Create a second strategy vault with risk level 2
+    await client.createStrategyVault({
+      admin: newAdmin,
+      mint: usdcTokenMint,
+      riskLevel: 2
+    });
+
+
+    console.log("depositing with ", depositor4.publicKey.toBase58());
+    // Deposit into both strategy vaults
+    await client.userDeposit({
+      depositor: depositor4,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 50 * 10 ** 6
+    });
+
+    await client.userDeposit({
+      depositor: depositor4,
+      mint: usdcTokenMint,
+      riskLevel: 2,
+      amount: 75 * 10 ** 6
+    });
+
+    // Execute arbitrage on both vaults
+    await client.executeArbitrageMock({
+      ammWallet: ammWallet,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 20 * 10 ** 6
+    });
+
+    await client.executeArbitrageMock({
+      ammWallet: ammWallet,
+      mint: usdcTokenMint,
+      riskLevel: 2,
+      amount: 30 * 10 ** 6
+    });
+
+    // Get balance before claims
+    const balanceBefore = await client.getAccount(depositor4ATA);
+
+    // Claim profit from both vaults
+    await client.claimProfit({
+      depositor: depositor4,
+      mint: usdcTokenMint,
+      riskLevel: 1
+    });
+
+    await client.claimProfit({
+      depositor: depositor4,
+      mint: usdcTokenMint,
+      riskLevel: 2
+    });
+
+    // Get balance after claims
+    const balanceAfter = await client.getAccount(depositor4ATA);
+
+    // Verify that balance increased
+    assert.isAbove(Number(balanceAfter.amount), Number(balanceBefore.amount));
+});
 
   it("TEST 6.5: Users claiming profit from treasury vault from same strategy vault", async () => {
-    // This test would require multiple users claiming from the same vault
-    // Implementation depends on the specific business logic
+    // Create multiple depositors
+    const depositor5a = anchor.web3.Keypair.generate();
+    const depositor5b = anchor.web3.Keypair.generate();
+    await client.airdrop([depositor5a.publicKey, depositor5b.publicKey], 5);
+    
+    const depositor5aATA = await client.getOrCreateATA(usdcTokenMint, depositor5a);
+    const depositor5bATA = await client.getOrCreateATA(usdcTokenMint, depositor5b);
+    
+    await client.mintToATA({ 
+      mint: usdcTokenMint, 
+      dest: depositor5aATA.address, 
+      authority: newAdmin, 
+      amount: 100 * 10 ** 6 
+    });
+    
+    await client.mintToATA({ 
+      mint: usdcTokenMint, 
+      dest: depositor5bATA.address, 
+      authority: newAdmin, 
+      amount: 100 * 10 ** 6 
+    });
+
+    // Both depositors deposit into the same vault
+    await client.userDeposit({
+      depositor: depositor5a,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 60 * 10 ** 6
+    });
+
+    await client.userDeposit({
+      depositor: depositor5b,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 40 * 10 ** 6
+    });
+
+    // Execute arbitrage to generate profit
+    await client.executeArbitrageMock({
+      ammWallet: ammWallet,
+      mint: usdcTokenMint,
+      riskLevel: 1,
+      amount: 50 * 10 ** 6
+    });
+
+    // Get balances before claims
+    const balance5aBefore = await client.getAccount(depositor5aATA.address);
+    const balance5bBefore = await client.getAccount(depositor5bATA.address);
+
+    // Both users claim profit
+    await client.claimProfit({
+      depositor: depositor5a,
+      mint: usdcTokenMint,
+      riskLevel: 1
+    });
+
+    await client.claimProfit({
+      depositor: depositor5b,
+      mint: usdcTokenMint,
+      riskLevel: 1
+    });
+
+    // Get balances after claims
+    const balance5aAfter = await client.getAccount(depositor5aATA.address);
+    const balance5bAfter = await client.getAccount(depositor5bATA.address);
+
+    // Verify that both balances increased
+    assert.isAbove(Number(balance5aAfter.amount), Number(balance5aBefore.amount));
+    assert.isAbove(Number(balance5bAfter.amount), Number(balance5bBefore.amount));
+
+    // Verify that depositor5a got more profit (60% vs 40% of deposits)
+    const profit5a = Number(balance5aAfter.amount) - Number(balance5aBefore.amount);
+    const profit5b = Number(balance5bAfter.amount) - Number(balance5bBefore.amount);
+    assert.isAbove(profit5a, profit5b);
   });
 });

@@ -7,8 +7,9 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
+  createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
-import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { TheNyxWeave } from "../target/types/the_nyx_weave";
 import * as anchor from "@coral-xyz/anchor";
 
@@ -133,6 +134,9 @@ export class NyxClient {
   }
 
   async userDeposit({ depositor, mint, riskLevel, amount }: { depositor: Keypair; mint: PublicKey; riskLevel: number; amount: number; }) {
+    
+    console.log("depositing inside client with depositor ", depositor.publicKey.toBase58());
+
     const [strategyVaultPDA] = PublicKey.findProgramAddressSync([
       Buffer.from("strategy_vault"),
       mint.toBuffer(),
@@ -146,7 +150,13 @@ export class NyxClient {
       strategyVaultPDA.toBuffer()
     ], this.program.programId);
 
+
     const depositorATA = getAssociatedTokenAddressSync(mint, depositor.publicKey);
+    // console.log("depositing into strategy vault......")
+    // console.log("depositor", depositor.publicKey);
+    // // console.log("mint", mint);
+    // // console.log("riskLevel", riskLevel);
+    // // console.log("depositorATA", depositorATA);
     const vaultTokenAccount = getAssociatedTokenAddressSync(mint, strategyVaultPDA, true);
 
     await this.program.methods
@@ -253,6 +263,34 @@ export class NyxClient {
       .rpc();
   }
 
+  async createTokenAccountIfNotExists({
+    mint,
+    owner,
+    tokenAccount
+  }: {
+    mint: PublicKey;
+    owner: PublicKey;
+    tokenAccount: PublicKey;
+  }) {
+    try {
+      const accountInfo = await this.provider.connection.getAccountInfo(tokenAccount);
+      if (!accountInfo) {
+        const tx = new Transaction().add(
+          createAssociatedTokenAccountInstruction(
+            this.provider.wallet.publicKey,
+            tokenAccount,
+            owner,
+            mint
+          )
+        );
+        await this.provider.sendAndConfirm(tx);
+      }
+    } catch (error) {
+      console.error("Error creating token account:", error);
+      throw error;
+    }
+  }
+
   async claimProfit({ 
     depositor, 
     mint, 
@@ -287,20 +325,8 @@ export class NyxClient {
     const treasuryVaultATA = getAssociatedTokenAddressSync(mint, treasuryVaultPDA, true);
     const strategyVaultATA = getAssociatedTokenAddressSync(mint, strategyVaultPDA, true);
 
-    console.log("depositorATA", depositorATA);
-    console.log("treasuryVaultATA", treasuryVaultATA);
-    console.log("strategyVaultATA", strategyVaultATA);
-    console.log("depositorPDA", depositorPDA);
-    console.log("globalConfigPDA", globalConfigPDA);
-    console.log("strategyVaultPDA", strategyVaultPDA);
-    console.log("treasuryVaultPDA", treasuryVaultPDA);
-    console.log("depositor", depositor.publicKey);
-    console.log("mint", mint);
-    console.log("riskLevel", riskLevel);
-    console.log("depositor", depositor.publicKey);
-    
     await this.program.methods
-      .claimProfit()
+      .claimProfit(riskLevel)
       .accountsPartial({
         depositor: depositor.publicKey,
         depositorTokenAccount: depositorATA,

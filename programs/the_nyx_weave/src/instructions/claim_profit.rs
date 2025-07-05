@@ -63,7 +63,7 @@ pub struct ClaimProfit<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
+pub fn claim_profit(ctx: Context<ClaimProfit>, risk_level: u8) -> Result<()> {
 
     let deposit_token = &mut ctx.accounts.deposit_token;
     let treasury_vault = &mut ctx.accounts.treasury_vault;
@@ -74,15 +74,43 @@ pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
     let depositor_account = &mut ctx.accounts.depositor_account;
     let strategy_vault = &mut ctx.accounts.strategy_vault;
 
+    // Check if there's any profit to claim
+    require!(strategy_vault.total_profit > 0, ErrorCode::InsufficientFunds);
+    
+    // Check if user has any deposits
+    require!(depositor_account.total_amount_deposited > 0, ErrorCode::InsufficientFunds);
+    
+    // Check if treasury has enough funds
+    require!(treasury_vault_token_account.amount > 0, ErrorCode::InsufficientFunds);
+
+    require!(strategy_vault.total_deposits > 0, ErrorCode::InvalidVaultState);
+
     let treasury_vault_authority_seeds: &[&[u8]] = &[
     b"treasury_vault",
     &[treasury_vault_bump],
     ];
 
-    // calculate user's share of profit
-    let user_share = strategy_vault.total_deposits.checked_div(depositor_account.total_amount_deposited).ok_or(ErrorCode::ArithmeticOverflow)?;
+    // Calculate user's share of profit based on their deposit proportion
+    let user_share_numerator = depositor_account.total_amount_deposited
+        .checked_mul(strategy_vault.total_profit)
+        .ok_or(ErrorCode::ArithmeticOverflow)?;
+    
+    let profit_amount = user_share_numerator
+        .checked_div(strategy_vault.total_deposits)
+        .ok_or(ErrorCode::ArithmeticOverflow)?;
 
-    let profit_amount = user_share.checked_mul(strategy_vault.total_profit).ok_or(ErrorCode::ArithmeticOverflow)?;
+    require!(treasury_vault_token_account.amount >= profit_amount, ErrorCode::InsufficientFunds);
+
+
+    // Ensure we don't transfer more than available in treasury
+    let transfer_amount = if profit_amount > treasury_vault_token_account.amount {
+        treasury_vault_token_account.amount
+    } else {
+        profit_amount
+    };
+
+    // Only transfer if there's something to transfer
+    require!(transfer_amount > 0, ErrorCode::InsufficientFunds);
 
     let signer_seeds: &[&[&[u8]]] = &[treasury_vault_authority_seeds];
 
@@ -97,9 +125,21 @@ pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
             },
             signer_seeds,
         ),
-        profit_amount,
+        transfer_amount,
         deposit_token.decimals,
     )?;
+
+    // Update treasury vault stats
+    treasury_vault.total_profits_distributed = treasury_vault.total_profits_distributed
+        .checked_add(transfer_amount)
+        .ok_or(ErrorCode::ArithmeticOverflow)?;
+
+    emit!(ProfitClaimedEvent {
+        depositor: ctx.accounts.depositor.key(),
+        deposit_token: ctx.accounts.deposit_token.key(),
+        amount: transfer_amount,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
 
     Ok(())
 }

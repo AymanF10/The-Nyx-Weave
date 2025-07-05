@@ -72,8 +72,8 @@ pub mod the_nyx_weave {
         Ok(())
     }
 
-    pub fn claim_profit(ctx: Context<ClaimProfit>) -> Result<()> {
-        instructions::claim_profit(ctx)?;
+    pub fn claim_profit(ctx: Context<ClaimProfit>, risk_level: u8) -> Result<()> {
+        instructions::claim_profit(ctx, risk_level)?;
      
         Ok(())
     }
