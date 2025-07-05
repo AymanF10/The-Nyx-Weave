@@ -1,0 +1,30 @@
+{
+  "pools": [
+    {
+      "name": "USDT-USDC",
+      "address": "ARwi1S4DaiTG5DX7S4M4ZsrXqpMD1MrTmbu9ue2tpmEq",
+      "swapAmount": 5000000,
+      "swapYtoX": true,
+      "isPartialFill": false,
+      "maxExtraBinArrays": 3,
+      "decimals": 6
+    },
+    {
+      "name": "SOL-mSOL",
+      "address": "CC1Xvcf2jfDLRKfnCCqs171rktb9WyTBB8KBes8oCaJp",
+      "swapAmount": 5000000,
+      "swapYtoX": false,
+      "isPartialFill": false,
+      "maxExtraBinArrays": 0,
+      "decimals": 6
+    }
+  ],
+  "scheduler": {
+    "cronExpression": "*/30 * * * * *",
+    "description": "Every 30 seconds"
+  },
+  "rpc": {
+    "endpoint": "https://api.mainnet-beta.solana.com",
+    "commitment": "finalized"
+  }
+} 
