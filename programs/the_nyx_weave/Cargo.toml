@@ -21,4 +21,5 @@ idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
 ephemeral-rollups-sdk = { version = "0.2.5", features = ["anchor"] }
+cpi-example = { git = "https://github.com/MeteoraAg/cpi-examples.git", features = ["cpi"] }
 

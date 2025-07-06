@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 /// Import the ephemeral rollups SDK which allows for improved efficiency in certain Solana transaction types
 /// Enables optimized transaction processing for arbitrage operations
 use ephemeral_rollups_sdk::anchor::ephemeral;
+use cpi_example::cpi_example::*;
 
 
 pub mod constants;   
@@ -69,6 +70,11 @@ pub mod the_nyx_weave {
     pub fn user_withdraw(ctx: Context<UserDeposit>, risk_level: u8, amount: u64) -> Result<()> {
         instructions::withdraw(ctx, risk_level, amount)?;
         
+        Ok(())
+    }
+
+    pub fn handle_dlmm_swap<'info>(ctx: Context<'_, '_, '_, 'info, DlmmSwap<'info>>, amount_in: u64, min_amount_out: u64) -> Result<()> {
+        instructions::handle_dlmm_swap(ctx, amount_in, min_amount_out)?;
         Ok(())
     }
 

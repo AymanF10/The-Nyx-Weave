@@ -529,6 +529,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 
 [[package]]
+name = "cpi-example"
+version = "0.1.0"
+source = "git+https://github.com/MeteoraAg/cpi-examples.git#3326f57fb616c5a310920aa4d2c22073eb3dc6fb"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "bytemuck",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2608,6 +2618,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "cpi-example",
  "ephemeral-rollups-sdk",
 ]
 
