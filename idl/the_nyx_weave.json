@@ -1,0 +1,602 @@
+{
+  "address": "9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz",
+  "metadata": {
+    "name": "the_nyx_weave",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "createStrategy",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "admins",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "globalConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "strategyVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "riskLevel",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initAdmins",
+      "accounts": [
+        {
+          "name": "deployer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "adminPubkey",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "initConfigTreasury",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "administrators",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "globalConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeBps",
+          "type": "u64"
+        },
+        {
+          "name": "minProfitThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "maxRetries",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "userDeposit",
+      "accounts": [
+        {
+          "name": "depositor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "depositToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositorTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "depositorAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "strategyVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "riskLevel",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "userWithdraw",
+      "accounts": [
+        {
+          "name": "depositor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "depositToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositorTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "depositorAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "strategyVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "riskLevel",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Administrator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "administrators",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "administratorsBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositorAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalAmountDeposited",
+            "type": "u64"
+          },
+          {
+            "name": "lastDepositTime",
+            "type": "i64"
+          },
+          {
+            "name": "depositorBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feeBps",
+            "type": "u64"
+          },
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "maxRetries",
+            "type": "u8"
+          },
+          {
+            "name": "minProfitThreshold",
+            "type": "u64"
+          },
+          {
+            "name": "globalConfigBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyVault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalDeposits",
+            "type": "u64"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "riskLevel",
+            "type": "u8"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "isDelegated",
+            "type": "bool"
+          },
+          {
+            "name": "strategyVaultBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryVault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "treasuryAdmin",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalProfitsSecured",
+            "type": "u64"
+          },
+          {
+            "name": "totalProfitsDistributed",
+            "type": "u64"
+          },
+          {
+            "name": "lastDistributionTime",
+            "type": "i64"
+          },
+          {
+            "name": "treasuryVaultBump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "DepositEvent",
+      "fields": [
+        {
+          "name": "depositor",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "depositToken",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "InitializeEvent",
+      "fields": [
+        {
+          "name": "admin",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "feeBps",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "minProfitThreshold",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "maxRetries",
+          "type": "u8",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "StrategyCreatedEvent",
+      "fields": [
+        {
+          "name": "strategyVault",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "depositTokenMint",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "riskLevel",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "createdAt",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "WithdrawEvent",
+      "fields": [
+        {
+          "name": "depositor",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "withdrawToken",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "withdrawalTime",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidOwner",
+      "msg": "Invalid account owner: Operation not permitted"
+    },
+    {
+      "code": 6001,
+      "name": "OnlyAdmin",
+      "msg": "Only Admin Can Call This Instruction"
+    },
+    {
+      "code": 6002,
+      "name": "TokenMismatch",
+      "msg": "Token Mint Are Different. Ensure Same"
+    },
+    {
+      "code": 6003,
+      "name": "InactiveStrategy",
+      "msg": "Specified Strategy Vault Is Disabled"
+    },
+    {
+      "code": 6004,
+      "name": "VaultInDelegation",
+      "msg": "Cannot Withdraw From Strategy Vault During Delegation"
+    },
+    {
+      "code": 6005,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access: User lacks required permissions"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds for the requested operation"
+    },
+    {
+      "code": 6007,
+      "name": "ProfitTooLow",
+      "msg": "Trade does not meet minimum profitability threshold"
+    },
+    {
+      "code": 6008,
+      "name": "PriceDeviationTooHigh",
+      "msg": "Price deviation exceeds configured risk parameters"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidMint",
+      "msg": "Invalid token mint: Operation cannot proceed"
+    },
+    {
+      "code": 6010,
+      "name": "TokenTransferFailed",
+      "msg": "Token transfer failed: Validation error"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidStrategyConfiguration",
+      "msg": "Invalid strategy configuration: Parameters out of acceptable range"
+    },
+    {
+      "code": 6012,
+      "name": "StrategyInactive",
+      "msg": "Strategy is not currently active"
+    },
+    {
+      "code": 6013,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow detected: Calculation exceeds maximum value"
+    },
+    {
+      "code": 6014,
+      "name": "ArithmeticUnderflow",
+      "msg": "Arithmetic underflow detected: Calculation below minimum value"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidTimestamp",
+      "msg": "Invalid timestamp: Operation timing constraint violated"
+    },
+    {
+      "code": 6016,
+      "name": "MaxRetriesExceeded",
+      "msg": "Maximum retry limit exceeded"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidParameter",
+      "msg": "Invalid parameter provided: Value does not meet requirements"
+    },
+    {
+      "code": 6018,
+      "name": "VaultEmpty",
+      "msg": "Vault is empty or has insufficient capital"
+    },
+    {
+      "code": 6019,
+      "name": "AccountInitializationFailed",
+      "msg": "Account initialization failed"
+    },
+    {
+      "code": 6020,
+      "name": "OperationNotAllowed",
+      "msg": "Operation not allowed in current state"
+    }
+  ]
+}
