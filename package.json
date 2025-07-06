@@ -4,7 +4,7 @@
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "setup:devnet": "ts-node simulate/0_setup_devnet.ts",
-    "test:er": "anchor test tests/er-delegation-commit.ts",
+    "test:er": "ANCHOR_PROVIDER_URL=https://api.devnet.solana.com ANCHOR_WALLET=arbitrage-wallet.json ts-mocha -p ./tsconfig.json -t 1000000 tests/er-delegation-commit.ts",
     "test:er:full": "ts-node tests/run-er-tests.ts",
     "sim:setup": "ts-node simulate/0_setup_devnet.ts",
     "sim:create-strategy": "ts-node simulate/1_create_strategy.ts",

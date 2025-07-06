@@ -10,7 +10,7 @@ async function main() {
   try {
     // Step 1: Run the setup script
     console.log("\n📋 Step 1: Setting up devnet environment...");
-    execSync('npm run setup:devnet', { 
+    execSync('yarn setup:devnet', { 
       stdio: 'inherit',
       cwd: path.join(__dirname, '..')
     });
@@ -18,7 +18,7 @@ async function main() {
     
     // Step 2: Run the ER delegation tests
     console.log("\n🧪 Step 2: Running ER delegation tests...");
-    execSync('anchor test tests/er-delegation-commit.ts', { 
+    execSync('anchor test tests/er-delegation-commit.ts --skip-deploy', { 
       stdio: 'inherit',
       cwd: path.join(__dirname, '..')
     });
