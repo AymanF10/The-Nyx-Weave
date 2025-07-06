@@ -134,7 +134,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
         //@ts-ignore
         strategyVault: strategyVaultPDA,
         vaultTokenAccount: strategyVaultATA,
-      })
+      }).signers([admin])
       .transaction();
       // For Delegating, fee payer is the base layer provider wallet
       delegation_tx.feePayer = provider.wallet.publicKey;
@@ -181,7 +181,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
         strategyVault: strategyVaultPDA,
         admins: adminPDA,
         vaultTokenAccount: strategyVaultATA,
-      })
+      }).signers([admin])
       .transaction();
       commit_no_undelegate_tx.feePayer = ephemeralProvider.wallet.publicKey;
       
@@ -230,7 +230,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
         strategyVault: strategyVaultPDA,
         admins: adminPDA,
         vaultTokenAccount: strategyVaultATA,
-      })
+      }).signers([admin])
       .transaction();
       // Base Layer provider wallet as fee payer
       commit_and_undelegate_tx.feePayer = provider.wallet.publicKey;
