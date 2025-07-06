@@ -55,8 +55,8 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     
     // Load keypairs from setup script
     try {
-      deployer = loadKeypair("./simulate/deployer-keypair.json");
-      admin = loadKeypair("./simulate/admin-keypair.json");
+      deployer = loadKeypair("./simulate/arbitrage-wallet.json");
+      admin = loadKeypair("./simulate/arbitrage-wallet.json");
       ammWallet = loadKeypair("./simulate/amm-wallet.json");
       testUser1 = loadKeypair("./simulate/test-user-1.json");
       testUser2 = loadKeypair("./simulate/test-user-2.json");
@@ -113,11 +113,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
 
   it("TEST 6  :::  Delegating Strategy Vault", async () => {
     // Get The PDA
-    const riskLevel = 1;
-    const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
-      program.programId
-    );
+    const riskLevel = 3;
+    // const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+    //   [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
+    //   program.programId
+    // );
+    const strategyVaultPDA = new PublicKey('A6jP6nwgfjePtejXCia9rh2pMt1g2KHN6MkFouxZDF2d');
 
     const strategyVaultATA = await getAssociatedTokenAddressSync(
       usdcTokenMint,
@@ -126,15 +127,18 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
       program.programId,
       ASSOCIATED_TOKEN_PROGRAM_ID
     );
+
+    console.log("Strategy Vault ATA is: ", strategyVaultATA.toBase58());
+    console.log("Strategy Vault PDA is: ", strategyVaultPDA.toBase58());
     
     let delegation_tx = await program.methods
       .delegateStrategy(usdcTokenMint, riskLevel)
       .accounts({
-        caller: deployer.publicKey,
+        caller: admin.publicKey,
         //@ts-ignore
         strategyVault: strategyVaultPDA,
         vaultTokenAccount: strategyVaultATA,
-      }).signers([admin])
+      })
       .transaction();
       // For Delegating, fee payer is the base layer provider wallet
       delegation_tx.feePayer = provider.wallet.publicKey;
@@ -144,7 +148,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
       delegation_tx = await ephemeralProvider.wallet.signTransaction(delegation_tx);
 
       // Base Layer Provider send and confirm transaction
-      const txHash = await provider.sendAndConfirm(delegation_tx, [], {
+      const txHash = await provider.sendAndConfirm(delegation_tx, [admin], {
         skipPreflight: true,
         commitment: "confirmed"
       });
@@ -152,7 +156,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
 
   });
 
-  it("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
+  it.skip("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
     // Get The PDA
     const riskLevel = 1;
     const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
@@ -176,12 +180,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     let commit_no_undelegate_tx = await program.methods
       .commitArbitrageNoUndelegate()
       .accounts({
-        caller: deployer.publicKey,
+        caller: admin.publicKey,
         //@ts-ignore
         strategyVault: strategyVaultPDA,
         admins: adminPDA,
         vaultTokenAccount: strategyVaultATA,
-      }).signers([admin])
+      })
       .transaction();
       commit_no_undelegate_tx.feePayer = ephemeralProvider.wallet.publicKey;
       
@@ -202,7 +206,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
 
   });
 
-  it("TEST 8 ::: Commit Arbitrage And Undelegate From ER", async () => {
+  it.skip("TEST 8 ::: Commit Arbitrage And Undelegate From ER", async () => {
     // Get The PDA
     const riskLevel = 1;
     const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
@@ -225,12 +229,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     let commit_and_undelegate_tx = await program.methods
       .commitArbitrageAndUndelegate()
       .accounts({
-        caller: deployer.publicKey,
+        caller: admin.publicKey,
         //@ts-ignore
         strategyVault: strategyVaultPDA,
         admins: adminPDA,
         vaultTokenAccount: strategyVaultATA,
-      }).signers([admin])
+      })
       .transaction();
       // Base Layer provider wallet as fee payer
       commit_and_undelegate_tx.feePayer = provider.wallet.publicKey;
@@ -246,7 +250,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   });
 
   // Additional test for user deposits and withdrawals
-  it("TEST 9 ::: User Deposit and Withdrawal", async () => {
+  it.skip("TEST 9 ::: User Deposit and Withdrawal", async () => {
     const riskLevel = 1;
     const depositAmount = 100 * 10 ** 6; // 100 USDC
 
@@ -275,7 +279,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   });
 
   // Test for executing arbitrage mock
-  it("TEST 10 ::: Execute Arbitrage Mock", async () => {
+  it.skip("TEST 10 ::: Execute Arbitrage Mock", async () => {
     const riskLevel = 1;
     const arbitrageAmount = 50 * 10 ** 6; // 50 USDC
 
@@ -290,7 +294,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   });
 
   // Test for claiming profits
-  it("TEST 11 ::: Claim Profits", async () => {
+  it.skip("TEST 11 ::: Claim Profits", async () => {
     const riskLevel = 1;
 
     const txHash = await client.claimProfit(

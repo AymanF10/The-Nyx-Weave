@@ -56,9 +56,8 @@ export class NyxWeaveClient {
   }
 
   async getStrategyVaultAddress(depositTokenMint: PublicKey, riskLevel: number): Promise<[PublicKey, number]> {
-    // Convert risk level to big-endian bytes (8 bytes)
-    const riskLevelBytes = Buffer.alloc(8);
-    riskLevelBytes.writeBigUInt64BE(BigInt(riskLevel));
+    // Convert risk level to big-endian bytes (1 byte for u8)
+    const riskLevelBytes = Buffer.from([riskLevel]);
     
     return PublicKey.findProgramAddressSync(
       [

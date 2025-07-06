@@ -4,7 +4,11 @@
   "globalConfig": "8KTwAbjjURUB9WvBy4dQxjCotxrXt3beZKGdHsN4WSMD",
   "treasuryVault": "",
   "usdcMint": "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m",
-  "strategyVaults": {},
+  "strategyVaults": {
+    "risk_1": "9KgG7vhCCa88oQSYSmH8mYLDJAKDzn7HfRhk6ohhnu5r",
+    "risk_2": "D4p4fjcK613xxT1YJYqQybwwNKesAPcM7tEruv8uZm6A",
+    "risk_3": "A6jP6nwgfjePtejXCia9rh2pMt1g2KHN6MkFouxZDF2d"
+  },
   "depositors": {},
   "ammWallets": {
     "main": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew"
@@ -51,5 +55,5 @@
       "usdcBalance": 0
     }
   },
-  "lastUpdate": 1751824846801
+  "lastUpdate": 1751827449404
 }
