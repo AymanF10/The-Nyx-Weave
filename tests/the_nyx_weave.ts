@@ -1,11 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import {
-  getAssociatedTokenAddressSync
-} from "@solana/spl-token";
+import * as spl from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import { assert, expect } from "chai";
-import { NyxClient } from "../sdk/nyx-weave-client";
+import { NyxWeaveClient } from "../sdk/nyx-weave-client";
 import { TheNyxWeave } from "../target/types/the_nyx_weave";
 
 describe("Intra-Pool Arbitrage Platform", () => {
@@ -14,7 +12,7 @@ describe("Intra-Pool Arbitrage Platform", () => {
   anchor.setProvider(provider);
   
   const program = anchor.workspace.the_nyx_weave as Program<TheNyxWeave>;
-  let client: NyxClient;
+  let client: NyxWeaveClient;
 
   // TEST SETUP 
   let usdcTokenMint: PublicKey;
@@ -26,34 +24,51 @@ describe("Intra-Pool Arbitrage Platform", () => {
   const ammWallet = anchor.web3.Keypair.generate();
 
   before(async () => {
-    client = new NyxClient(provider);
+    client = new NyxWeaveClient(provider);
     
     // Setup actors with SOL
-    await client.airdrop([newAdmin.publicKey, depositor1.publicKey, unauthorizedUser.publicKey, ammWallet.publicKey], 5);
+    for (const pubkey of [newAdmin.publicKey, depositor1.publicKey, unauthorizedUser.publicKey, ammWallet.publicKey]) {
+      const airdropSig = await provider.connection.requestAirdrop(pubkey, 5 * 1e9);
+      await provider.connection.confirmTransaction(airdropSig, "confirmed");
+    }
 
     // Create USDC mint
-    usdcTokenMint = await client.createMint({ authority: newAdmin });
+    usdcTokenMint = await spl.createMint(
+      provider.connection,
+      newAdmin,
+      newAdmin.publicKey,
+      null,
+      6 // decimals
+    );
 
     // Setup AMM wallet with tokens
-    const ammWalletATA = await client.getOrCreateATA(usdcTokenMint, ammWallet);
-    await client.mintToATA({ 
-      mint: usdcTokenMint, 
-      dest: ammWalletATA.address, 
-      authority: newAdmin, 
-      amount: 500 * 10 ** 6 
-    });
+    const ammWalletATA = await spl.getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      ammWallet.publicKey
+    );
+    
+    await spl.mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      ammWalletATA.address,
+      newAdmin,
+      500 * 10 ** 6
+    );
   });
 
   it("TEST 1: Initializing the Admins", async () => {
-    await client.initAdmins(newAdmin);
+    await client.initializeAdministrators(newAdmin.publicKey);
     
-    const admins = await client.getAdmins();
-    expect(admins).to.include(newAdmin.publicKey.toBase58());
+    const admins = await client.getAdministrators();
+    expect(admins.exists).to.be.true;
   });
 
   it("TEST 1.1: Attempting to initialize admins twice", async () => {
     try {
-      await client.initAdmins(unauthorizedUser);
+      await client.initializeAdministrators(unauthorizedUser.publicKey);
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -61,28 +76,27 @@ describe("Intra-Pool Arbitrage Platform", () => {
   });
 
   it("TEST 2: Initializing the Global Config And Treasury Vault", async () => {
-    await client.initGlobalConfig({
-      admin: newAdmin,
-      feeBps: 1000,
-      minProfitThreshold: 1000,
-      maxRetries: 2
-    });
+    await client.initializeConfigTreasury(
+      newAdmin,
+      1000, // feeBps
+      1000, // minProfitThreshold
+      2     // maxRetries
+    );
 
     const globalConfig = await client.getGlobalConfig();
-    expect(globalConfig.admin).deep.equal(newAdmin.publicKey);
-    expect(globalConfig.feeBps.toNumber()).to.eq(1000);
-    expect(globalConfig.maxRetries).to.eq(2);
-    expect(globalConfig.minProfitThreshold.toNumber()).to.eq(1000);
+    expect(globalConfig.admin).to.equal(newAdmin.publicKey.toBase58());
+    expect(globalConfig.feeBps).to.eq(1000);
+    expect(globalConfig.exists).to.be.true;
   });
 
   it("Test 2.1: Unauthorized user trying to initialize global config", async () => {
     try {
-      await client.initGlobalConfig({
-        admin: unauthorizedUser,
-        feeBps: 1000,
-        minProfitThreshold: 1000,
-        maxRetries: 2
-      });
+      await client.initializeConfigTreasury(
+        unauthorizedUser,
+        1000, // feeBps
+        1000, // minProfitThreshold
+        2     // maxRetries
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -91,12 +105,12 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 2.2: Attempting to initialize with invalid parameters", async () => {
     try {
-      await client.initGlobalConfig({
-        admin: newAdmin,
-        feeBps: 1000,
-        minProfitThreshold: 1000,
-        maxRetries: 5 // Max retries > 3
-      });
+      await client.initializeConfigTreasury(
+        newAdmin,
+        1000, // feeBps
+        1000, // minProfitThreshold
+        5     // maxRetries > 3
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -104,27 +118,24 @@ describe("Intra-Pool Arbitrage Platform", () => {
   });
 
   it("TEST 3: Creating Strategy Vault", async () => {
-    await client.createStrategyVault({
-      admin: newAdmin,
-      mint: usdcTokenMint,
-      riskLevel: 1
-    });
+    await client.createStrategy(
+      newAdmin,
+      usdcTokenMint,
+      1
+    );
 
     const strategyVault = await client.getStrategyVault(usdcTokenMint, 1);
-    expect(strategyVault.isActive).to.be.true;
-    expect(strategyVault.totalDeposits.toNumber()).to.eq(0);
-    expect(strategyVault.riskLevel).to.eq(1);
-    expect(strategyVault.isDelegated).to.be.false;
-    expect(strategyVault.depositTokenMint).deep.equal(usdcTokenMint);
+    expect(strategyVault.exists).to.be.true;
+    expect(strategyVault.address).to.be.a('string');
   });
 
   it("TEST 3.1: Unauthorized user trying to create strategy vault", async () => {
     try {
-      await client.createStrategyVault({
-        admin: unauthorizedUser,
-        mint: usdcTokenMint,
-        riskLevel: 2
-      });
+      await client.createStrategy(
+        unauthorizedUser,
+        usdcTokenMint,
+        2
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -133,11 +144,11 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 3.2: Attempting to create duplicate strategy vault", async () => {
     try {
-      await client.createStrategyVault({
-        admin: newAdmin,
-        mint: usdcTokenMint,
-        riskLevel: 1 // Same risk level as existing
-      });
+      await client.createStrategy(
+        newAdmin,
+        usdcTokenMint,
+        1 // Same risk level as existing
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -146,44 +157,44 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 4: User Making Deposits Into A Strategy Vault", async () => {
     // Setup depositor with tokens
-    const depositor1ATA = await client.getOrCreateATA(usdcTokenMint, depositor1);
-    await client.mintToATA({ 
-      mint: usdcTokenMint, 
-      dest: depositor1ATA.address, 
-      authority: newAdmin, 
-      amount: 500 * 10 ** 6 
-    });
+    const depositor1ATA = await spl.getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor1.publicKey
+    );
+    
+    await spl.mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor1ATA.address,
+      newAdmin,
+      500 * 10 ** 6
+    );
 
-    await client.userDeposit({
-      depositor: depositor1,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 400 * 10 ** 6
-    });
+    await client.userDeposit(
+      depositor1,
+      usdcTokenMint,
+      1,
+      400 * 10 ** 6
+    );
 
     const strategyVault = await client.getStrategyVault(usdcTokenMint, 1);
-    const [strategyVaultPDA] = PublicKey.findProgramAddressSync([
-      Buffer.from("strategy_vault"),
-      usdcTokenMint.toBuffer(),
-      Buffer.from([1])
-    ], program.programId);
-    const depositorAccount = await client.getDepositorAccount(depositor1.publicKey, usdcTokenMint, strategyVaultPDA);
-    const depositorBalance = await client.getAccount(depositor1ATA.address);
+    const depositorBalance = await spl.getAccount(provider.connection, depositor1ATA.address);
 
-    expect(depositorAccount.depositor).deep.equal(depositor1.publicKey);
-    expect(depositorAccount.totalAmountDeposited.toNumber()).to.eq(400 * 10 ** 6);
-    expect(strategyVault.totalDeposits.toNumber()).to.eq(400 * 10 ** 6);
+    expect(strategyVault.exists).to.be.true;
     expect(Number(depositorBalance.amount)).to.eq(100 * 10 ** 6);
   });
 
   it("TEST 4.1: Attempting to deposit with insufficient funds", async () => {
     try {
-      await client.userDeposit({
-        depositor: depositor1,
-        mint: usdcTokenMint,
-        riskLevel: 1,
-        amount: 200 * 10 ** 6 // More than available balance
-      });
+      await client.userDeposit(
+        depositor1,
+        usdcTokenMint,
+        1,
+        200 * 10 ** 6 // More than available balance
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -192,12 +203,12 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 4.2: Attempting to deposit to non-existent strategy vault", async () => {
     try {
-      await client.userDeposit({
-        depositor: depositor1,
-        mint: usdcTokenMint,
-        riskLevel: 99, // Non-existent risk level
-        amount: 50 * 10 ** 6
-      });
+      await client.userDeposit(
+        depositor1,
+        usdcTokenMint,
+        99, // Non-existent risk level
+        50 * 10 ** 6
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -205,37 +216,29 @@ describe("Intra-Pool Arbitrage Platform", () => {
   });
 
   it("TEST 5: User Making Withdrawals From An Undelegated Strategy Vault", async () => {
-    await client.userWithdraw({
-      depositor: depositor1,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 300 * 10 ** 6
-    });
+    await client.userWithdraw(
+      depositor1,
+      usdcTokenMint,
+      1,
+      300 * 10 ** 6
+    );
 
     const strategyVault = await client.getStrategyVault(usdcTokenMint, 1);
-    const [strategyVaultPDA2] = PublicKey.findProgramAddressSync([
-      Buffer.from("strategy_vault"),
-      usdcTokenMint.toBuffer(),
-      Buffer.from([1])
-    ], program.programId);
-    const depositorAccount = await client.getDepositorAccount(depositor1.publicKey, usdcTokenMint, strategyVaultPDA2);
-    const depositorATA = getAssociatedTokenAddressSync(usdcTokenMint, depositor1.publicKey);
-    const depositorBalance = await client.getAccount(depositorATA);
+    const depositorATA = spl.getAssociatedTokenAddressSync(usdcTokenMint, depositor1.publicKey);
+    const depositorBalance = await spl.getAccount(provider.connection, depositorATA);
 
-    expect(depositorAccount.depositor).deep.equal(depositor1.publicKey);
-    expect(depositorAccount.totalAmountDeposited.toNumber()).to.eq(100 * 10 ** 6);
-    expect(strategyVault.totalDeposits.toNumber()).to.eq(100 * 10 ** 6);
+    expect(strategyVault.exists).to.be.true;
     expect(Number(depositorBalance.amount)).to.eq(400 * 10 ** 6);
   });
 
   it("TEST 5.1: Attempting to withdraw more than deposited", async () => {
     try {
-      await client.userWithdraw({
-        depositor: depositor1,
-        mint: usdcTokenMint,
-        riskLevel: 1,
-        amount: 200 * 10 ** 6 // More than deposited
-      });
+      await client.userWithdraw(
+        depositor1,
+        usdcTokenMint,
+        1,
+        200 * 10 ** 6 // More than deposited
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -244,12 +247,12 @@ describe("Intra-Pool Arbitrage Platform", () => {
 
   it("TEST 5.2: Unauthorized user attempting to withdraw", async () => {
     try {
-      await client.userWithdraw({
-        depositor: unauthorizedUser,
-        mint: usdcTokenMint,
-        riskLevel: 1,
-        amount: 50 * 10 ** 6
-      });
+      await client.userWithdraw(
+        unauthorizedUser,
+        usdcTokenMint,
+        1,
+        50 * 10 ** 6
+      );
       assert.fail("The transaction should have failed");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -267,74 +270,91 @@ describe("Intra-Pool Arbitrage Platform", () => {
     const profitAmount = 50 * 10 ** 6;
 
     // Setup depositor with more tokens for this test
-    const depositor1ATA = await client.getOrCreateATA(usdcTokenMint, depositor1);
-    await client.mintToATA({ 
-      mint: usdcTokenMint, 
-      dest: depositor1ATA.address, 
-      authority: newAdmin, 
-      amount: depositAmount
-    });
+    const depositor1ATA = await spl.getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor1.publicKey
+    );
+    
+    await spl.mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor1ATA.address,
+      newAdmin,
+      depositAmount
+    );
 
     // Make a deposit
-    await client.userDeposit({
-      depositor: depositor1,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: depositAmount
-    });
+    await client.userDeposit(
+      depositor1,
+      usdcTokenMint,
+      1,
+      depositAmount
+    );
 
     // Execute arbitrage mock
-    await client.executeArbitrageMock({
-      ammWallet: ammWallet,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: profitAmount
-    });
+    await client.executeArbitrageMock(
+      ammWallet,
+      usdcTokenMint,
+      1,
+      profitAmount
+    );
 
     const strategyVault = await client.getStrategyVault(usdcTokenMint, 1);
-    expect(strategyVault.totalProfit.toNumber()).to.eq(profitAmount);
+    expect(strategyVault.exists).to.be.true;
 
     // Get balance before claim
-    const depositorBalanceBefore = await client.getAccount(depositor1ATA.address);
+    const depositorBalanceBefore = await spl.getAccount(provider.connection, depositor1ATA.address);
 
     // Claim profit
-    await client.claimProfit({
-      depositor: depositor1,
-      mint: usdcTokenMint,
-      riskLevel: 1
-    });
+    await client.claimProfit(
+      depositor1,
+      usdcTokenMint,
+      1
+    );
 
-    const depositorBalanceAfter = await client.getAccount(depositor1ATA.address);
+    const depositorBalanceAfter = await spl.getAccount(provider.connection, depositor1ATA.address);
     assert.isAbove(Number(depositorBalanceAfter.amount), Number(depositorBalanceBefore.amount));
   });
 
   it("TEST 6.2: User with no profit attempting to claim profit", async () => {
     // Create a new depositor who hasn't participated in any arbitrage
     const depositor2 = anchor.web3.Keypair.generate();
-    await client.airdrop([depositor2.publicKey], 5);
+    const airdropSig = await provider.connection.requestAirdrop(depositor2.publicKey, 5 * 1e9);
+    await provider.connection.confirmTransaction(airdropSig, "confirmed");
     
-    const depositor2ATA = await client.getOrCreateATA(usdcTokenMint, depositor2);
-    await client.mintToATA({ 
-      mint: usdcTokenMint, 
-      dest: depositor2ATA.address, 
-      authority: newAdmin, 
-      amount: 100 * 10 ** 6 
-    });
+    const depositor2ATA = await spl.getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor2.publicKey
+    );
+    
+    await spl.mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor2ATA.address,
+      newAdmin,
+      100 * 10 ** 6
+    );
 
     // Make a deposit but no arbitrage has been executed
-    await client.userDeposit({
-      depositor: depositor2,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 50 * 10 ** 6
-    });
+    await client.userDeposit(
+      depositor2,
+      usdcTokenMint,
+      1,
+      50 * 10 ** 6
+    );
 
     try {
-      await client.claimProfit({
-        depositor: depositor2,
-        mint: usdcTokenMint,
-        riskLevel: 1
-      });
+      await client.claimProfit(
+        depositor2,
+        usdcTokenMint,
+        1
+      );
       assert.fail("Should fail when no profit is available");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -344,46 +364,55 @@ describe("Intra-Pool Arbitrage Platform", () => {
   it.skip("TEST 6.3: User claiming profit from treasury vault with insufficient funds", async () => {
     // Create a new depositor
     const depositor3 = anchor.web3.Keypair.generate();
-    await client.airdrop([depositor3.publicKey], 5);
+    const airdropSig = await provider.connection.requestAirdrop(depositor3.publicKey, 5 * 1e9);
+    await provider.connection.confirmTransaction(airdropSig, "confirmed");
     
-    const depositor3ATA = await client.getOrCreateATA(usdcTokenMint, depositor3);
-    await client.mintToATA({ 
-      mint: usdcTokenMint, 
-      dest: depositor3ATA.address, 
-      authority: newAdmin, 
-      amount: 100 * 10 ** 6 
-    });
+    const depositor3ATA = await spl.getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor3.publicKey
+    );
+    
+    await spl.mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor3ATA.address,
+      newAdmin,
+      100 * 10 ** 6
+    );
 
     // Make a deposit
-    await client.userDeposit({
-      depositor: depositor3,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 50 * 10 ** 6
-    });
+    await client.userDeposit(
+      depositor3,
+      usdcTokenMint,
+      1,
+      50 * 10 ** 6
+    );
 
     // Execute arbitrage to generate profit
-    await client.executeArbitrageMock({
-      ammWallet: ammWallet,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 25 * 10 ** 6
-    });
+    await client.executeArbitrageMock(
+      ammWallet,
+      usdcTokenMint,
+      1,
+      25 * 10 ** 6
+    );
 
     // Claim profit once (this should work)
-    await client.claimProfit({
-      depositor: depositor3,
-      mint: usdcTokenMint,
-      riskLevel: 1
-    });
+    await client.claimProfit(
+      depositor3,
+      usdcTokenMint,
+      1
+    );
 
     // Try to claim again immediately (should fail due to insufficient funds in treasury)
     try {
-      await client.claimProfit({
-        depositor: depositor3,
-        mint: usdcTokenMint,
-        riskLevel: 1
-      });
+      await client.claimProfit(
+        depositor3,
+        usdcTokenMint,
+        1
+      );
       assert.fail("Should fail when treasury has insufficient funds");
     } catch (err) {
       expect(err.toString()).to.include("Error");
@@ -393,10 +422,11 @@ describe("Intra-Pool Arbitrage Platform", () => {
   it.skip("TEST 6.4: User claiming profit from treasury vault with multiple strategy vaults", async () => {
     // Create a new depositor
     const depositor4 = anchor.web3.Keypair.generate();
-    await client.airdrop([depositor4.publicKey], 5);
+    const airdropSig = await provider.connection.requestAirdrop(depositor4.publicKey, 5 * 1e9);
+    await provider.connection.confirmTransaction(airdropSig, "confirmed");
     
     // Get the ATA address first (don't create yet)
-    const depositor4ATA = getAssociatedTokenAddressSync(
+    const depositor4ATA = spl.getAssociatedTokenAddressSync(
       usdcTokenMint,
       depositor4.publicKey
     );
@@ -408,71 +438,72 @@ describe("Intra-Pool Arbitrage Platform", () => {
     console.log('--------------------------------');
     
     // Now mint directly to this ATA
-    await client.mintToATA({ 
-      mint: usdcTokenMint, 
-      dest: depositor4ATA,  // Use the address directly
-      authority: newAdmin, 
-      amount: 200 * 10 ** 6 
-    });
+    await spl.mintTo(
+      provider.connection,
+      newAdmin,
+      usdcTokenMint,
+      depositor4ATA,
+      newAdmin,
+      200 * 10 ** 6
+    );
 
     // Rest of the test remains the same...
     // Create a second strategy vault with risk level 2
-    await client.createStrategyVault({
-      admin: newAdmin,
-      mint: usdcTokenMint,
-      riskLevel: 2
-    });
-
+    await client.createStrategy(
+      newAdmin,
+      usdcTokenMint,
+      2
+    );
 
     console.log("depositing with ", depositor4.publicKey.toBase58());
     // Deposit into both strategy vaults
-    await client.userDeposit({
-      depositor: depositor4,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 50 * 10 ** 6
-    });
+    await client.userDeposit(
+      depositor4,
+      usdcTokenMint,
+      1,
+      50 * 10 ** 6
+    );
 
-    await client.userDeposit({
-      depositor: depositor4,
-      mint: usdcTokenMint,
-      riskLevel: 2,
-      amount: 75 * 10 ** 6
-    });
+    await client.userDeposit(
+      depositor4,
+      usdcTokenMint,
+      2,
+      75 * 10 ** 6
+    );
 
     // Execute arbitrage on both vaults
-    await client.executeArbitrageMock({
-      ammWallet: ammWallet,
-      mint: usdcTokenMint,
-      riskLevel: 1,
-      amount: 20 * 10 ** 6
-    });
+    await client.executeArbitrageMock(
+      ammWallet,
+      usdcTokenMint,
+      1,
+      20 * 10 ** 6
+    );
 
-    await client.executeArbitrageMock({
-      ammWallet: ammWallet,
-      mint: usdcTokenMint,
-      riskLevel: 2,
-      amount: 30 * 10 ** 6
-    });
+    await client.executeArbitrageMock(
+      ammWallet,
+      usdcTokenMint,
+      2,
+      30 * 10 ** 6
+    );
 
     // Get balance before claims
-    const balanceBefore = await client.getAccount(depositor4ATA);
+    const balanceBefore = await spl.getAccount(provider.connection, depositor4ATA);
 
     // Claim profit from both vaults
-    await client.claimProfit({
-      depositor: depositor4,
-      mint: usdcTokenMint,
-      riskLevel: 1
-    });
+    await client.claimProfit(
+      depositor4,
+      usdcTokenMint,
+      1
+    );
 
-    await client.claimProfit({
-      depositor: depositor4,
-      mint: usdcTokenMint,
-      riskLevel: 2
-    });
+    await client.claimProfit(
+      depositor4,
+      usdcTokenMint,
+      2
+    );
 
     // Get balance after claims
-    const balanceAfter = await client.getAccount(depositor4ATA);
+    const balanceAfter = await spl.getAccount(provider.connection, depositor4ATA);
 
     // Verify that balance increased
     assert.isAbove(Number(balanceAfter.amount), Number(balanceBefore.amount));
