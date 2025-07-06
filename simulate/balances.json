@@ -1,0 +1,50 @@
+{
+  "deployer": {
+    "sol": 2,
+    "tokens": {}
+  },
+  "admin": {
+    "sol": 3.78211416,
+    "tokens": {}
+  },
+  "ammWallet": {
+    "sol": 5,
+    "tokens": {
+      "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m": 1000000
+    }
+  },
+  "testUser1": {
+    "sol": 0.2,
+    "tokens": {
+      "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m": 10000
+    }
+  },
+  "testUser2": {
+    "sol": 0.2,
+    "tokens": {
+      "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m": 15000
+    }
+  },
+  "testUser3": {
+    "sol": 0.2,
+    "tokens": {
+      "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m": 20000
+    }
+  },
+  "testUser4": {
+    "sol": 0.2,
+    "tokens": {
+      "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m": 25000
+    }
+  },
+  "testUser5": {
+    "sol": 0.2,
+    "tokens": {
+      "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m": 30000
+    }
+  },
+  "unauthorizedUser": {
+    "sol": 0.2,
+    "tokens": {}
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "admin": "gBNwrB6w5gkQPEu72fBQWcfzCbGgMnH38EpmqYKH3xy",
+  "administrators": "EGBhLchcVgxFrrRc1DGdx6j1Xcpkb6PSN5CJBAdXb3QH",
+  "globalConfig": "8KTwAbjjURUB9WvBy4dQxjCotxrXt3beZKGdHsN4WSMD",
+  "treasuryVault": "",
+  "usdcMint": "3xa6KHXmRJWnsfQfM3RoFVbwXh6aEkvhd8wRWKTPDh1m",
+  "strategyVaults": {},
+  "depositors": {},
+  "ammWallets": {
+    "main": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew"
+  },
+  "users": {
+    "ammWallet": {
+      "pubkey": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew",
+      "usdcTokenAccount": "5AbjbaYNeGEqhnn7UVc4TB7Ldby6VSGNDNsigo3LW5RK",
+      "usdcBalance": 1000000
+    },
+    "testUser1": {
+      "pubkey": "9HgLXWgRwJySS2KDi25FWbkoURPvo6TgnBbEui3s6pvY",
+      "usdcTokenAccount": "8MZBquT7RCxH6RhtPyVT9kfn1DXbCf9EcpKYWHFqA1cS",
+      "usdcBalance": 10000
+    },
+    "testUser2": {
+      "pubkey": "9gqsRMRhaaSwPr5F3Fm8Hmtpqy3pWAxFT78kdCLtmDxw",
+      "usdcTokenAccount": "nJ1YWxFk4XYoejUsZPnsDYaGXmU9yQwNpPm8jzwLJ4A",
+      "usdcBalance": 15000
+    },
+    "testUser3": {
+      "pubkey": "B5oV1x87Csa5z76yECQsqegYpySLC3cyi3cePMNaZyQX",
+      "usdcTokenAccount": "7U2m2CgXd1s2h5Yx6BTwcH8eEXHVpoMWhbTcGrokLeVW",
+      "usdcBalance": 20000
+    },
+    "testUser4": {
+      "pubkey": "9eAThdrVWsNMHZFXpTRuUkeTrJPwqqsUCecNC7rAgkRA",
+      "usdcTokenAccount": "CDHxx3NcjQp3FsEmwDsRZe7oZriHGqcFaDYEn5b21PSy",
+      "usdcBalance": 25000
+    },
+    "testUser5": {
+      "pubkey": "2Hn5jxqqkUNep5c5w7nNwsZBgXMRGjM4KnNPLhrhdE9U",
+      "usdcTokenAccount": "FWrbEdBESgJSBw5zUXzCyHUQjeNXBqPJ4KkrxLWgM9hk",
+      "usdcBalance": 30000
+    },
+    "admin": {
+      "pubkey": "gBNwrB6w5gkQPEu72fBQWcfzCbGgMnH38EpmqYKH3xy",
+      "usdcTokenAccount": "G1gx55pPjwfjquFuKK1wDnpDf3CGXQvVHJEHgCDGpixz",
+      "usdcBalance": 0
+    },
+    "deployer": {
+      "pubkey": "FZCJkMxcV7sS4V1BUAfGsSwj9M5briZ3ujkbhm35jiMF",
+      "usdcTokenAccount": "8ngemKWWK7bWqZfTuk3s94JGoMUXb3GvLDXqyzxGi61i",
+      "usdcBalance": 0
+    }
+  },
+  "lastUpdate": 1751823586062
+}
