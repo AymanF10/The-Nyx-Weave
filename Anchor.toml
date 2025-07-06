@@ -14,7 +14,7 @@ the_nyx_weave = "9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "arbitrage-wallet.json"
 
 [scripts]
