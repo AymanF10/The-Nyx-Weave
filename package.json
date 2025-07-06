@@ -2,7 +2,16 @@
   "license": "ISC",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "sim:setup": "ts-node simulate/0_setup_devnet.ts",
+    "sim:create-strategy": "ts-node simulate/1_create_strategy.ts",
+    "sim:deposit": "ts-node simulate/2_deposit.ts",
+    "sim:withdraw": "ts-node simulate/3_withdraw.ts",
+    "sim:arbitrage": "ts-node simulate/4_execute_arbitrage.ts",
+    "sim:claim": "ts-node simulate/5_claim_profits.ts",
+    "sim:balances": "ts-node simulate/6_check_balances.ts",
+    "sim:all": "ts-node simulate/run_all.ts",
+    "sim:sequence": "npm run sim:setup && npm run sim:create-strategy && npm run sim:deposit && npm run sim:arbitrage && npm run sim:claim && npm run sim:balances"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
