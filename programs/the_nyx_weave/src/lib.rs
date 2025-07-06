@@ -95,4 +95,19 @@ pub mod the_nyx_weave {
         Ok(())
     }
 
+    pub fn claim_profit(ctx: Context<ClaimProfit>, risk_level: u8) -> Result<()> {
+        instructions::claim_profit(ctx, risk_level)?;
+     
+        Ok(())
+    }
+
+    /// Execute an arbitrage operation for a given risk level
+    /// This will transfer the profit from the strategy vault to the treasury vault
+    /// and update the depositor account with the new profit
+    pub fn execute_arbitrage_mock(ctx: Context<ExecuteArbitrageMock>, risk_level: u8, amount: u64) -> Result<()> {
+        instructions::execute_arbitrage_mock(ctx, risk_level, amount)?;
+        
+        Ok(())
+    }
+
 }

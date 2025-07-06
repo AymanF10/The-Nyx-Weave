@@ -39,9 +39,7 @@ pub struct UserDeposit<'info> {
         init_if_needed,
         payer = depositor,
         space = 8 + DepositorAccount::INIT_SPACE,
-        // todo!() prolly needs to tie depositor_account to risk level so user can deposit into many
-        // todo!() risk levels.... might not be needed as deposit_token is unique across each strategy vault
-        seeds = [b"depositor", depositor.key().as_ref(), deposit_token.key().as_ref()],
+        seeds = [b"depositor", depositor.key().as_ref(), deposit_token.key().as_ref(), strategy_vault.key().as_ref()],
         bump,
     )]
     pub depositor_account: Account<'info, DepositorAccount>,
