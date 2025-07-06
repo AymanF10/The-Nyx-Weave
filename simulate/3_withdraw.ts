@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
 import { NyxWeaveClient } from "../sdk/nyx-weave-client";
-import { loadKeypair, saveKeypair, formatTokenAmount, toRawAmount } from "./util";
+import { loadKeypair, formatTokenAmount } from "./util";
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -21,7 +21,7 @@ interface ProgramState {
 interface DepositorInfo {
   pubkey: string;
   ata: string;
-  deposits: { [key: string]: number }; // strategyVaultPDA -> amount
+  deposits: { [key: string]: number };
   lastDeposit: number;
 }
 
@@ -31,25 +31,14 @@ interface BalanceInfo {
 }
 
 async function main() {
-  console.log("💰 User Deposit Simulation...");
+  console.log("💸 User Withdrawal Simulation...");
   
   // Initialize connection to devnet
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
   
   // Load keypairs
-  const admin = loadKeypair("./simulate/admin-keypair.json");
   const deployer = loadKeypair("./simulate/deployer-keypair.json");
-  
-  // Create or load depositor
-  let depositor: Keypair;
-  try {
-    depositor = loadKeypair("./simulate/depositor-keypair.json");
-    console.log("📂 Loaded existing depositor");
-  } catch (error) {
-    depositor = Keypair.generate();
-    saveKeypair(depositor, "./simulate/depositor-keypair.json");
-    console.log("📝 Created new depositor");
-  }
+  const depositor = loadKeypair("./simulate/depositor-keypair.json");
   
   console.log("Depositor:", depositor.publicKey.toBase58());
   
@@ -84,77 +73,28 @@ async function main() {
   }
 
   const usdcMint = new PublicKey(state.usdcMint);
+  const depositorInfo = state.depositors[depositor.publicKey.toBase58()];
   
-  // Check depositor balance and fund if needed
-  const depositorSolBalance = await connection.getBalance(depositor.publicKey);
-  if (depositorSolBalance < 0.1 * 1e9) {
-    console.log("Requesting airdrop for depositor...");
-    try {
-      const airdropSig = await connection.requestAirdrop(depositor.publicKey, 2 * 1e9);
-      await connection.confirmTransaction(airdropSig, "confirmed");
-      console.log("✅ Airdrop successful");
-    } catch (error) {
-      console.log("❌ Airdrop failed. Please fund manually.");
-    }
+  if (!depositorInfo) {
+    console.error("❌ No deposits found for this depositor. Run 2_deposit.ts first.");
+    process.exit(1);
   }
   
-  // Fund depositor with USDC
+  console.log("📊 Current deposits:", Object.keys(depositorInfo.deposits).length);
+  
+  // Get current balances
   const depositorATA = spl.getAssociatedTokenAddressSync(usdcMint, depositor.publicKey);
-  try {
-    const ataAccount = await spl.getAccount(connection, depositorATA);
-    console.log("✅ Depositor ATA exists");
-  } catch (error) {
-    console.log("Creating depositor ATA...");
-    await spl.getOrCreateAssociatedTokenAccount(
-      connection,
-      admin,
-      usdcMint,
-      depositor.publicKey
-    );
-    console.log("✅ Depositor ATA created");
-  }
-  
-  // Mint USDC to depositor
   const currentBalance = await spl.getAccount(connection, depositorATA);
-  if (Number(currentBalance.amount) < 1000 * 10 ** 6) {
-    console.log("Minting USDC to depositor...");
-    await spl.mintTo(
-      connection,
-      admin,
-      usdcMint,
-      depositorATA,
-      admin,
-      10000 * 10 ** 6 // 10k USDC
-    );
-    console.log("✅ Funded depositor with 10k USDC");
-  }
+  console.log("💰 Current USDC balance:", formatTokenAmount(Number(currentBalance.amount)));
   
-  // Initialize depositor in state if not exists
-  if (!state.depositors[depositor.publicKey.toBase58()]) {
-    state.depositors[depositor.publicKey.toBase58()] = {
-      pubkey: depositor.publicKey.toBase58(),
-      ata: depositorATA.toBase58(),
-      deposits: {},
-      lastDeposit: Date.now()
-    };
-  }
-  
-  // Initialize balances for depositor
-  if (!balances[depositor.publicKey.toBase58()]) {
-    balances[depositor.publicKey.toBase58()] = {
-      sol: depositorSolBalance / 1e9,
-      tokens: {}
-    };
-  }
-  
-  // Make deposits to different risk levels
-  const depositAmounts = {
-    1: 1000 * 10 ** 6, // 1k USDC
-    2: 2000 * 10 ** 6, // 2k USDC
-    3: 1500 * 10 ** 6  // 1.5k USDC
+  // Withdraw from different risk levels
+  const withdrawalAmounts = {
+    1: 500 * 10 ** 6,  // 500 USDC
+    2: 1000 * 10 ** 6, // 1k USDC
+    3: 750 * 10 ** 6   // 750 USDC
   };
   
-  for (const [riskLevel, amount] of Object.entries(depositAmounts)) {
+  for (const [riskLevel, amount] of Object.entries(withdrawalAmounts)) {
     const vaultKey = `risk_${riskLevel}`;
     const strategyVaultPDA = state.strategyVaults[vaultKey];
     
@@ -163,10 +103,16 @@ async function main() {
       continue;
     }
     
-    console.log(`\n💰 Depositing ${formatTokenAmount(amount)} USDC to risk level ${riskLevel}...`);
+    const currentDeposit = depositorInfo.deposits[strategyVaultPDA] || 0;
+    if (currentDeposit < amount) {
+      console.log(`⚠️ Insufficient deposit for risk level ${riskLevel}. Available: ${formatTokenAmount(currentDeposit)}, Requested: ${formatTokenAmount(amount)}`);
+      continue;
+    }
+    
+    console.log(`\n💸 Withdrawing ${formatTokenAmount(amount)} USDC from risk level ${riskLevel}...`);
     
     try {
-      await client.userDeposit(
+      await client.userWithdraw(
         depositor,
         usdcMint,
         parseInt(riskLevel),
@@ -174,21 +120,19 @@ async function main() {
       );
       
       // Update state
-      state.depositors[depositor.publicKey.toBase58()].deposits[strategyVaultPDA] = 
-        (state.depositors[depositor.publicKey.toBase58()].deposits[strategyVaultPDA] || 0) + amount;
-      state.depositors[depositor.publicKey.toBase58()].lastDeposit = Date.now();
+      state.depositors[depositor.publicKey.toBase58()].deposits[strategyVaultPDA] = currentDeposit - amount;
       
-      console.log(`✅ Deposit successful to vault:`, strategyVaultPDA);
+      console.log(`✅ Withdrawal successful from vault:`, strategyVaultPDA);
       
       // Get updated balances
       const newBalance = await spl.getAccount(connection, depositorATA);
       balances[depositor.publicKey.toBase58()].tokens[usdcMint.toBase58()] = Number(newBalance.amount) / 10 ** 6;
       
-      console.log(`✅ Deposit successful to vault:`, strategyVaultPDA);
+      console.log(`✅ Withdrawal successful from vault:`, strategyVaultPDA);
       console.log(`💰 New balance: ${formatTokenAmount(Number(newBalance.amount))} USDC`);
       
     } catch (error) {
-      console.error(`❌ Deposit failed for risk level ${riskLevel}:`, error);
+      console.error(`❌ Withdrawal failed for risk level ${riskLevel}:`, error);
     }
   }
   
@@ -201,7 +145,7 @@ async function main() {
   fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
   fs.writeFileSync(balancesPath, JSON.stringify(balances, null, 2));
   
-  console.log("\n🎉 Deposit simulation complete!");
+  console.log("\n🎉 Withdrawal simulation complete!");
   console.log("📊 Final balances:");
   console.log("- SOL:", formatTokenAmount(balances[depositor.publicKey.toBase58()].sol, 9));
   console.log("- USDC:", formatTokenAmount(balances[depositor.publicKey.toBase58()].tokens[usdcMint.toBase58()] || 0));
@@ -209,4 +153,4 @@ async function main() {
   console.log("💰 Balances saved to:", balancesPath);
 }
 
-main().catch(console.error);
+main().catch(console.error); 
