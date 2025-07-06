@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
+    "@magicblock-labs/ephemeral-rollups-sdk": "^0.2.5",
     "@solana/spl-token": "^0.4.13"
   },
   "devDependencies": {
