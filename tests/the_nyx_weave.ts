@@ -25,8 +25,8 @@ describe("Intra-Pool Arbitrage Platform", () => {
   // Ephemeral Rollup Provider
   const ephemeralProvider = new anchor.AnchorProvider(
     new anchor.web3.Connection(
-      "https://devnet.magicblock.app/",
-      { wsEndpoint: "wss://devnet.magicblock.app/" }
+      process.env.PROVIDER_ENDPOINT || "https://devnet.magicblock.app/",
+      { wsEndpoint: process.env.WS_ENDPOINT || "wss://devnet.magicblock.app/" }
     ),
     anchor.Wallet.local()
   );
@@ -712,6 +712,14 @@ describe("Intra-Pool Arbitrage Platform", () => {
       [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
       program.programId
     );
+
+    const strategyVaultATA = await getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      strategyVaultPDA,
+      true,
+      program.programId,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
     
     let delegation_tx = await program.methods
       .delegateStrategy(usdcTokenMint, riskLevel)
@@ -719,12 +727,115 @@ describe("Intra-Pool Arbitrage Platform", () => {
         caller: deployer.publicKey,
         //@ts-ignore
         strategyVault: strategyVaultPDA,
+        vaultTokenAccount: strategyVaultATA,
       })
       .transaction();
+      // For Delegating, fee payer is the base layer provider wallet
       delegation_tx.feePayer = provider.wallet.publicKey;
       
       delegation_tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
+      // ER signs transaction below
       delegation_tx = await ephemeralProvider.wallet.signTransaction(delegation_tx);
 
+      // Base Layer Provider send and confirm transaction
+      const txHash = await provider.sendAndConfirm(delegation_tx, [], {
+        skipPreflight: true,
+        commitment: "confirmed"
+      });
+      console.log("Delegation Tx Hash on Base Layer is: ", txHash);
+
+  })
+
+  it("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
+    // Get The PDA
+    const riskLevel = 1;
+    const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
+      program.programId
+    );
+
+    const [adminPDA, adminPDABump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("administrators")],
+      program.programId
+    );
+
+    const strategyVaultATA = await getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      strategyVaultPDA,
+      true,
+      program.programId,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+    
+    let commit_no_undelegate_tx = await program.methods
+      .commitArbitrageNoUndelegate()
+      .accounts({
+        caller: deployer.publicKey,
+        //@ts-ignore
+        strategyVault: strategyVaultPDA,
+        admins: adminPDA,
+        vaultTokenAccount: strategyVaultATA,
+      })
+      .transaction();
+      commit_no_undelegate_tx.feePayer = ephemeralProvider.wallet.publicKey;
+      
+      commit_no_undelegate_tx.recentBlockhash = (await ephemeralProvider.connection.getLatestBlockhash()).blockhash;
+      commit_no_undelegate_tx = await ephemeralProvider.wallet.signTransaction(commit_no_undelegate_tx);
+      const commit_no_undelegate_tx_hash = await ephemeralProvider.sendAndConfirm(
+        commit_no_undelegate_tx, [], {skipPreflight: true}
+      );
+
+      // Get Commitment Signature
+      const commitSignature = await GetCommitmentSignature(
+        commit_no_undelegate_tx_hash,
+        ephemeralProvider.connection
+      );
+
+      // log tx on base
+      console.log("commit transaction on base is: ", commitSignature);
+
+  })
+
+  it("TEST 8 ::: Commit Arbitrage And Undelegate From ER", async () => {
+    // Get The PDA
+    const riskLevel = 1;
+    const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
+      program.programId
+    );
+    const [adminPDA, adminPDABump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("administrators")],
+      program.programId
+    );
+
+    const strategyVaultATA = await getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      strategyVaultPDA,
+      true,
+      program.programId,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+    
+    let commit_and_undelegate_tx = await program.methods
+      .commitArbitrageAndUndelegate()
+      .accounts({
+        caller: deployer.publicKey,
+        //@ts-ignore
+        strategyVault: strategyVaultPDA,
+        admins: adminPDA,
+        vaultTokenAccount: strategyVaultATA,
+      })
+      .transaction();
+      // Base Layer provider wallet as fee payer
+      commit_and_undelegate_tx.feePayer = provider.wallet.publicKey;
+      // Recent Blockhash of ER
+      commit_and_undelegate_tx.recentBlockhash = (await ephemeralProvider.connection.getLatestBlockhash()).blockhash;
+      // ER wallet signs transaction
+      commit_and_undelegate_tx = await ephemeralProvider.wallet.signTransaction(commit_and_undelegate_tx);
+      // ER will send and confirm transaction
+      const commit_and_undelegate_tx_hash = await ephemeralProvider.sendAndConfirm(
+        commit_and_undelegate_tx, [], {skipPreflight: true}
+      );
+      console.log("Commit And Undelegate from ER tx hash is: ", commit_and_undelegate_tx_hash);
   })
 });

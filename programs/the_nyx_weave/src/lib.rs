@@ -68,9 +68,25 @@ pub mod the_nyx_weave {
 
     // DELEGATE STRATEGY VAULT TO THE ER
     pub fn delegate_strategy(ctx: Context<DelegateArbitrage>, token: Pubkey, risk_level: u8) -> Result<()> {
-        ctx.accounts.delegate_strategy(token, risk_level)?;
+        ctx.accounts.delegate_strategy_and_vault_ata(token, risk_level)?;
         Ok(())
     }
+
+
+    // COMMIT ARBITRAGE TO BASE LAYER WITHOUT UNDELEGATING
+    pub fn commit_arbitrage_no_undelegate(ctx: Context<ArbitrageCommit>) -> Result<()> {
+
+        ctx.accounts.commit_arbitrage_without_undelegating()?;
+        Ok(())
+    }
+
+    // COMMIT ARBITRAGE TO BASE LAYER AND UNDELEGATE SV TO ALLOW FOR WITHDRAWAL
+    pub fn commit_arbitrage_and_undelegate(ctx: Context<ArbitrageCommit>) -> Result<()> {
+
+        ctx.accounts.commit_arbitrage_plus_undelegate()?;
+        Ok(())
+    }
+
 
     /// Allow users to withdraw their funds from a strategy
     pub fn user_withdraw(ctx: Context<UserDeposit>, risk_level: u8, amount: u64) -> Result<()> {

@@ -8,13 +8,14 @@ skip-lint = false
 [programs.localnet]
 the_nyx_weave = "9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz"
 
-
+[programs.devnet]
+the_nyx_weave = "9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "arbitrage-wallet.json"
 
 [scripts]
