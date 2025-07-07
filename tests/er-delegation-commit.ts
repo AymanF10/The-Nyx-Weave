@@ -5,16 +5,18 @@ import {
 } from "@magicblock-labs/ephemeral-rollups-sdk";
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
-    getAssociatedTokenAddressSync
+    getAssociatedTokenAddressSync,
+    TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
 import {
     Keypair,
-    PublicKey
+    PublicKey,
+    SystemProgram
 } from "@solana/web3.js";
 import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
-import { NyxWeaveClient } from "../sdk/nyx-weave-client";
+import { NyxClient } from "../sdk/nyx-weave-client";
 import { loadKeypair } from "../simulate/util";
 import { TheNyxWeave } from "../target/types/the_nyx_weave";
 
@@ -33,7 +35,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   );
 
   const program = anchor.workspace.the_nyx_weave as Program<TheNyxWeave>;
-  let client: NyxWeaveClient;
+  let client: NyxClient;
 
   // TEST SETUP - Load keypairs from setup script
   let usdcTokenMint: PublicKey;
@@ -86,7 +88,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     }
 
     // Initialize client
-    client = new NyxWeaveClient(provider);
+    client = new NyxClient(provider);
     console.log("✅ Initialized NyxWeave client");
 
     // Note: Skipping airdrops to avoid 429 error codes
@@ -112,49 +114,68 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   });
 
   it("TEST 6  :::  Delegating Strategy Vault", async () => {
-    // Get The PDA
     const riskLevel = 3;
-    // const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
-    //   [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
-    //   program.programId
-    // );
     const strategyVaultPDA = new PublicKey('A6jP6nwgfjePtejXCia9rh2pMt1g2KHN6MkFouxZDF2d');
 
-    const strategyVaultATA = await getAssociatedTokenAddressSync(
+    // Correct ATA creation using TOKEN_PROGRAM_ID
+    const strategyVaultATA = getAssociatedTokenAddressSync(
       usdcTokenMint,
       strategyVaultPDA,
       true,
-      program.programId,
-      ASSOCIATED_TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID
     );
 
-    console.log("Strategy Vault ATA is: ", strategyVaultATA.toBase58());
-    console.log("Strategy Vault PDA is: ", strategyVaultPDA.toBase58());
+    console.log("Strategy Vault ATA:", strategyVaultATA.toBase58());
+    console.log("Strategy Vault PDA:", strategyVaultPDA.toBase58());
     
-    let delegation_tx = await program.methods
-      .delegateStrategy(usdcTokenMint, riskLevel)
-      .accounts({
-        caller: admin.publicKey,
-        //@ts-ignore
-        strategyVault: strategyVaultPDA,
-        vaultTokenAccount: strategyVaultATA,
-      })
-      .transaction();
-      // For Delegating, fee payer is the base layer provider wallet
-      delegation_tx.feePayer = provider.wallet.publicKey;
+    // Get latest blockhash from both providers
+    const [baseBlockhash, erBlockhash] = await Promise.all([
+      provider.connection.getLatestBlockhash(),
+      ephemeralProvider.connection.getLatestBlockhash()
+    ]);
+
+    try {
+      // Build the transaction
+      const tx = await program.methods
+        .delegateStrategy(usdcTokenMint, riskLevel)
+        .accountsPartial({
+          caller: admin.publicKey,
+          strategyVault: strategyVaultPDA,
+          vaultTokenAccount: strategyVaultATA,
+        })
+        .transaction();
+
+      // Set fee payer and blockhash
+      tx.feePayer = provider.wallet.publicKey;
+      tx.recentBlockhash = baseBlockhash.blockhash;
+
+      // Sign with admin (required for strategy operations)
+      tx.sign(admin);
+
+      // ER signs transaction
+      const signedTx = await ephemeralProvider.wallet.signTransaction(tx);
+
+      // Send and confirm
+      const txHash = await provider.connection.sendRawTransaction(
+        signedTx.serialize(),
+        { skipPreflight: true }
+      );
+
+      console.log("Delegation Tx Hash:", txHash);
       
-      delegation_tx.recentBlockhash = (await provider.connection.getLatestBlockhash()).blockhash;
-      // ER signs transaction below
-      delegation_tx = await ephemeralProvider.wallet.signTransaction(delegation_tx);
-
-      // Base Layer Provider send and confirm transaction
-      const txHash = await provider.sendAndConfirm(delegation_tx, [admin], {
-        skipPreflight: true,
-        commitment: "confirmed"
+      // Confirm transaction
+      await provider.connection.confirmTransaction({
+        signature: txHash,
+        blockhash: baseBlockhash.blockhash,
+        lastValidBlockHeight: baseBlockhash.lastValidBlockHeight
       });
-      console.log("Delegation Tx Hash on Base Layer is: ", txHash);
 
-  });
+      console.log("Delegation confirmed!");
+    } catch (error) {
+      console.error("Delegation failed:", error);
+      throw error;
+    }
+});
 
   it.skip("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
     // Get The PDA
@@ -255,11 +276,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     const depositAmount = 100 * 10 ** 6; // 100 USDC
 
     // User deposits into strategy vault
-    await client.userDeposit(
-      testUser1,
-      usdcTokenMint,
+    await client.userDeposit({
+      depositor: testUser1,
+      mint: usdcTokenMint,
       riskLevel,
-      depositAmount
+      amount: depositAmount
+    }
     );
 
     // Verify deposit
@@ -268,12 +290,11 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
 
     // User withdraws from strategy vault
     const withdrawAmount = 50 * 10 ** 6; // 50 USDC
-    await client.userWithdraw(
-      testUser1,
-      usdcTokenMint,
+    await client.userWithdraw({
+      depositor: testUser1,
+      mint: usdcTokenMint,
       riskLevel,
-      withdrawAmount
-    );
+      amount: withdrawAmount});
 
     console.log("✅ User deposit and withdrawal test completed");
   });
@@ -283,11 +304,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     const riskLevel = 1;
     const arbitrageAmount = 50 * 10 ** 6; // 50 USDC
 
-    const txHash = await client.executeArbitrageMock(
+    const txHash = await client.executeArbitrageMock({
       ammWallet,
-      usdcTokenMint,
+      mint: usdcTokenMint,
       riskLevel,
-      arbitrageAmount
+      amount: arbitrageAmount
+    }
     );
 
     console.log("✅ Arbitrage mock executed:", txHash);
@@ -297,10 +319,11 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   it.skip("TEST 11 ::: Claim Profits", async () => {
     const riskLevel = 1;
 
-    const txHash = await client.claimProfit(
-      testUser1,
-      usdcTokenMint,
+    const txHash = await client.claimProfit({
+      depositor: testUser1,
+      mint: usdcTokenMint,
       riskLevel
+    }
     );
 
     console.log("✅ Profit claim executed:", txHash);
