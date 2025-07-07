@@ -15,8 +15,8 @@ the_nyx_weave = "CU8H5mnb1CdmJJiQj5AkowMRFWt7boSwKar6DxS5VUiu"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
-wallet = "arbitrage-wallet.json"
+cluster = "devnet"
+wallet = "~/magic/deploy.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

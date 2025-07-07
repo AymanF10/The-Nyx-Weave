@@ -68,7 +68,7 @@ pub mod the_nyx_weave {
 
     // DELEGATE STRATEGY VAULT TO THE ER
     pub fn delegate_strategy(ctx: Context<DelegateArbitrage>, token: Pubkey, risk_level: u8) -> Result<()> {
-        ctx.accounts.delegate_strategy_and_vault_ata(token, risk_level)?;
+        ctx.accounts.delegate_strategy_vault_to_er(token, risk_level)?;
         Ok(())
     }
 

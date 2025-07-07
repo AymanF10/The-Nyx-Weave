@@ -119,16 +119,17 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     const strategyVaultPDA = (await client.getStrategyVault(usdcTokenMint, riskLevel))[0];
 
     // Correct ATA creation using TOKEN_PROGRAM_ID
+    /*
     const strategyVaultATA = getAssociatedTokenAddressSync(
       usdcTokenMint,
       strategyVaultPDA,
       true,
       TOKEN_2022_PROGRAM_ID,
-    );
+    );*/
 
-    console.log("USDC Mint: ", usdcTokenMint.toBase58());
-    console.log("Strategy Vault ATA:", strategyVaultATA.toBase58());
-    console.log("Strategy Vault PDA:", strategyVaultPDA.toBase58());
+    //console.log("USDC Mint: ", usdcTokenMint.toBase58());
+    //console.log("Strategy Vault ATA:", strategyVaultATA.toBase58());
+    //console.log("Strategy Vault PDA:", strategyVaultPDA.toBase58());
     
     // Get latest blockhash from both providers
     const [baseBlockhash, erBlockhash] = await Promise.all([
@@ -143,7 +144,6 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
         .accountsPartial({
           caller: admin.publicKey,
           strategyVault: strategyVaultPDA,
-          vaultTokenAccount: strategyVaultATA,
         })
         .transaction();
 
@@ -158,12 +158,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
       const signedTx = await ephemeralProvider.wallet.signTransaction(tx);
 
       // // Send and confirm
-      // const txHash = await provider.connection.sendRawTransaction(
-      //   signedTx.serialize(),
-      //   { skipPreflight: true }
-      // );
+       const txHash = await provider.connection.sendRawTransaction(
+         signedTx.serialize(),
+         { skipPreflight: true }
+       );
 
-      // console.log("Delegation Tx Hash:", txHash);
+       console.log("Delegation Tx Hash:", txHash);
       
       // // Confirm transaction
       // await provider.connection.confirmTransaction({

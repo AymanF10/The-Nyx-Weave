@@ -23,7 +23,7 @@ pub struct DelegateArbitrage<'info> {
     pub strategy_vault: AccountInfo<'info>,
 
     // I think We Ought To Delegate The strategy vault's ATA as well
-    /// CHECK: This is safe as we are delegating it as well
+    /*  CHECK: This is safe as we are delegating it as well
     #[account(
         mut,
         del,
@@ -34,12 +34,12 @@ pub struct DelegateArbitrage<'info> {
         ],
         bump,
     )]
-    pub vault_token_account: AccountInfo<'info>,
+    pub vault_token_account: AccountInfo<'info>,*/
 }
 
 /// An Implementation for delegation
 impl<'info> DelegateArbitrage<'info> {
-    pub fn delegate_strategy_and_vault_ata(&mut self, token: Pubkey, risk_level: u8) -> Result<()> {
+    pub fn delegate_strategy_vault_to_er(&mut self, token: Pubkey, risk_level: u8) -> Result<()> {
 
         self.delegate_strategy_vault(
             &self.caller,
@@ -48,12 +48,12 @@ impl<'info> DelegateArbitrage<'info> {
         )?;
 
         // GOT TO DELEGATE ATA FOR THE STRATEGY VAULT, AS THAT IS WHAT REALLY CONTAINS THE TOKENS
-        // NEEDED FOR SWAP INSIDE THE ER
+        /*  NEEDED FOR SWAP INSIDE THE ER
         self.delegate_vault_token_account(
             &self.caller,
             &[self.strategy_vault.key().as_ref(), token.as_ref(), ID.key().as_ref()],
             DelegateConfig::default()
-        )?;
+        )?;*/
         Ok(())
     }
 }
