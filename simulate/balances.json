@@ -1,46 +1,46 @@
 {
   "deployer": {
-    "sol": 1.99831548,
+    "sol": 1.99829548,
     "tokens": {}
   },
   "admin": {
-    "sol": 3.729936,
+    "sol": 3.71610736,
     "tokens": {}
   },
   "ammWallet": {
     "sol": 5,
     "tokens": {
-      "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f": 1000000
+      "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi": 1000000
     }
   },
   "testUser1": {
     "sol": 0.2,
     "tokens": {
-      "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f": 10000
+      "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi": 10000
     }
   },
   "testUser2": {
     "sol": 0.2,
     "tokens": {
-      "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f": 15000
+      "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi": 15000
     }
   },
   "testUser3": {
     "sol": 0.2,
     "tokens": {
-      "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f": 20000
+      "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi": 20000
     }
   },
   "testUser4": {
     "sol": 0.2,
     "tokens": {
-      "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f": 25000
+      "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi": 25000
     }
   },
   "testUser5": {
     "sol": 0.2,
     "tokens": {
-      "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f": 30000
+      "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi": 30000
     }
   },
   "unauthorizedUser": {

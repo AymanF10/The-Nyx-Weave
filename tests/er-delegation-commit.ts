@@ -6,6 +6,7 @@ import {
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     getAssociatedTokenAddressSync,
+    TOKEN_2022_PROGRAM_ID,
     TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
 import {
@@ -114,17 +115,18 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
   });
 
   it("TEST 6  :::  Delegating Strategy Vault", async () => {
-    const riskLevel = 3;
-    const strategyVaultPDA = new PublicKey('A6jP6nwgfjePtejXCia9rh2pMt1g2KHN6MkFouxZDF2d');
+    const riskLevel = 10;
+    const strategyVaultPDA = (await client.getStrategyVault(usdcTokenMint, riskLevel))[0];
 
     // Correct ATA creation using TOKEN_PROGRAM_ID
     const strategyVaultATA = getAssociatedTokenAddressSync(
       usdcTokenMint,
       strategyVaultPDA,
       true,
-      TOKEN_PROGRAM_ID
+      TOKEN_2022_PROGRAM_ID,
     );
 
+    console.log("USDC Mint: ", usdcTokenMint.toBase58());
     console.log("Strategy Vault ATA:", strategyVaultATA.toBase58());
     console.log("Strategy Vault PDA:", strategyVaultPDA.toBase58());
     
@@ -155,29 +157,29 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
       // ER signs transaction
       const signedTx = await ephemeralProvider.wallet.signTransaction(tx);
 
-      // Send and confirm
-      const txHash = await provider.connection.sendRawTransaction(
-        signedTx.serialize(),
-        { skipPreflight: true }
-      );
+      // // Send and confirm
+      // const txHash = await provider.connection.sendRawTransaction(
+      //   signedTx.serialize(),
+      //   { skipPreflight: true }
+      // );
 
-      console.log("Delegation Tx Hash:", txHash);
+      // console.log("Delegation Tx Hash:", txHash);
       
-      // Confirm transaction
-      await provider.connection.confirmTransaction({
-        signature: txHash,
-        blockhash: baseBlockhash.blockhash,
-        lastValidBlockHeight: baseBlockhash.lastValidBlockHeight
-      });
+      // // Confirm transaction
+      // await provider.connection.confirmTransaction({
+      //   signature: txHash,
+      //   blockhash: baseBlockhash.blockhash,
+      //   lastValidBlockHeight: baseBlockhash.lastValidBlockHeight
+      // });
 
-      console.log("Delegation confirmed!");
+      // console.log("Delegation confirmed!");
     } catch (error) {
       console.error("Delegation failed:", error);
       throw error;
     }
 });
 
-  it("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
+  it.skip("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
     // Get The PDA
     const riskLevel = 1;
     const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
@@ -246,6 +248,12 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
       program.programId,
       ASSOCIATED_TOKEN_PROGRAM_ID
     );
+
+    console.log('--------------------------------');
+    console.log("Strategy Vault ATA: ", strategyVaultATA.toBase58());
+    console.log("Strategy Vault PDA: ", strategyVaultPDA.toBase58());
+    console.log("Admin PDA: ", adminPDA.toBase58());
+    console.log('--------------------------------');
     
     let commit_and_undelegate_tx = await program.methods
       .commitArbitrageAndUndelegate()

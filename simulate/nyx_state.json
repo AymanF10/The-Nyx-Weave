@@ -3,11 +3,13 @@
   "administrators": "7F6XU6H1XBpnaL4NtUohVFGqNgdSymLvfrqythnmZhG6",
   "globalConfig": "Go8wpLZmXDskeVc9kDkbzdJtVuM6bPS8PfnNkVVMgioZ",
   "treasuryVault": "FHTdymkLPPK78FXLssaHrVtf5orm4Z6aHuXcMWaAh9oB",
-  "usdcMint": "H5yM8nPPUwVkJTP1aRyQSLZDGvan9ooRVwTD3Nb1PM3f",
+  "usdcMint": "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi",
   "strategyVaults": {
     "risk_1": "GhgF3NgZMNtfGNpqLKW6Htww887uqdLahLFQ6DupvPK6",
     "risk_2": "wpfQX2nUK5NFkd6PRPhEPy6bqdTEQs93JCdTPMXhqJw",
-    "risk_3": "2euPBQZ3JtUhXp6VQeAqBnFPTvtSiQFW69azydyGR9iX"
+    "risk_3": "2euPBQZ3JtUhXp6VQeAqBnFPTvtSiQFW69azydyGR9iX",
+    "risk_4": "ARPU2EWPfiwQnyKLaQPXV7YEGqfwL7umCX2zXBRBvidR",
+    "risk_10": "BNr4vjQEgS1MuyBEPDZw9RuvgkiL8wippmooa3f5ce11"
   },
   "depositors": {},
   "ammWallets": {
@@ -55,5 +57,5 @@
       "usdcBalance": 0
     }
   },
-  "lastUpdate": 1751853547445
+  "lastUpdate": 1751890341145
 }

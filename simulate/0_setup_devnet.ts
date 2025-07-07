@@ -422,7 +422,7 @@ async function main() {
     console.log(`   Supply: ${formatTokenAmount(Number(mintInfo.supply), 6)} USDC`);
     console.log(`   Mint Authority: ${mintInfo.mintAuthority?.toBase58() || 'None'}`);
   } catch (error) {
-    console.log("❌ Failed to verify USDC mint:", error);
+    console.log("❌ Failed to verify USDC mint", usdcMint.toBase58(), error);
   }
   
   // Setup admin and deployer USDC accounts
@@ -476,7 +476,7 @@ async function main() {
   
   // Step 4: Create strategy vaults
   console.log("\n🏦 Step 4: Creating Strategy Vaults...");
-  const riskLevels = [1, 2, 3];
+  const riskLevels = [10];
   
   for (const riskLevel of riskLevels) {
     const vaultKey = `risk_${riskLevel}`;

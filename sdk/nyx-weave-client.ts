@@ -97,8 +97,16 @@ async createMint({ authority }: { authority: Keypair }): Promise<PublicKey> {
   if (!authority || !authority.publicKey) {
     throw new Error("Authority Keypair is required for mint creation");
   }
-  return await createMint(this.provider.connection, authority, authority.publicKey, null, 6);
-
+  return await createMint(
+    this.provider.connection, 
+    authority, 
+    authority.publicKey, 
+    null, 
+    6,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID
+  );
 }
 
   async getOrCreateATA(mint: PublicKey, owner: Keypair) {
@@ -154,79 +162,81 @@ async createMint({ authority }: { authority: Keypair }): Promise<PublicKey> {
     return await this.program.account.globalConfig.fetch(pda);
   }
 
-  async createStrategyVault({ admin, mint, riskLevel }: { admin: Keypair; mint: PublicKey; riskLevel: number; }) {
-    // Get all PDAs with bumps
-    const [adminPDA, adminBump] = PublicKey.findProgramAddressSync([
-      Buffer.from("administrators")
-    ], this.program.programId);
+  async createStrategyVault({
+    admin,
+    mint,
+    riskLevel
+  }: {
+    admin: Keypair;
+    mint: PublicKey;
+    riskLevel: number;
+  }) {
+        // Get PDAs
+        const [adminPDA, adminPDABump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("administrators")],
+          this.program.programId
+        );
+    
+        const [globalConfigPDA, globalConfigBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("global_config")],
+          this.program.programId
+        );
 
-    const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync([
-      Buffer.from("strategy_vault"),
-      mint.toBuffer(),
-      Buffer.from([riskLevel])
-    ], this.program.programId);
+        const [treasuryVaultPDA, treasuryVaultBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("treasury_vault")],
+          this.program.programId
+        );
+    
+    
+    
+        const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("strategy_vault"), mint.toBuffer(), Buffer.from([riskLevel])],
+          this.program.programId
+        );
 
-    const [treasuryVaultPDA, treasuryVaultBump] = await this.getTreasuryVaultAddress();
-    const [globalConfigPDA, globalConfigBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config")],
-      this.program.programId
-    );
+        console.log("!!!!!!!!      strategyVaultPDA", strategyVaultPDA.toBase58());
+        console.log("!!!!!!!!      mint", mint.toBase58());
+        console.log("!!!!!!!!      riskLevel", riskLevel);
+    
+        const vaultTokenAccount = await getAssociatedTokenAddressSync(
+          mint,
+          strategyVaultPDA,
+          true,
+          TOKEN_2022_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
 
-    // Get associated token accounts - MUST use same token program everywhere
-    const strategyVaultTokenAccount = await getAssociatedTokenAddress(
-      mint,
-      strategyVaultPDA,
-      true, // allowOwnerOffCurve
-      TOKEN_PROGRAM_ID // Must match Anchor program
-    );
+        const treasuryVaultTokenAccount = await getAssociatedTokenAddressSync(
+          mint,
+          treasuryVaultPDA,
+          true,
+          TOKEN_2022_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+        
+        // Call instruction
+        await this.program.methods
+          .createStrategy(riskLevel)
+          .accountsStrict({
+            admin: admin.publicKey,
+            //@ts-ignore
+            admins: adminPDA,
+            globalConfig: globalConfigPDA,
+            depositTokenMint: mint,
+            // @ts-ignore
+            strategyVault: strategyVaultPDA,
+            strategyVaultTokenAccount: vaultTokenAccount,
+            treasuryVault: treasuryVaultPDA,
+            treasuryVaultTokenAccount: treasuryVaultTokenAccount,
+    
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([admin])
+          .rpc();
+  }
 
-    const treasuryVaultTokenAccount = await getAssociatedTokenAddress(
-      mint,
-      treasuryVaultPDA,
-      true, // allowOwnerOffCurve
-      TOKEN_PROGRAM_ID // Must match Anchor program
-    );
-
-    console.log("Accounts being used:", {
-      admin: admin.publicKey.toString(),
-      admins: adminPDA.toString(),
-      globalConfig: globalConfigPDA.toString(),
-      depositTokenMint: mint.toString(),
-      strategyVault: strategyVaultPDA.toString(),
-      strategyVaultTokenAccount: strategyVaultTokenAccount.toString(),
-      treasuryVault: treasuryVaultPDA.toString(),
-      treasuryVaultTokenAccount: treasuryVaultTokenAccount.toString()
-    });
-
-    try {
-      const tx = await this.program.methods
-        .createStrategy(riskLevel)
-        .accountsStrict({
-          admin: admin.publicKey,
-          admins: adminPDA,
-          globalConfig: globalConfigPDA,
-          depositTokenMint: mint,
-          strategyVault: strategyVaultPDA,
-          strategyVaultTokenAccount,
-          treasuryVault: treasuryVaultPDA,
-          treasuryVaultTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([admin])
-        .rpc();
-
-      console.log("Transaction successful:", tx);
-      return tx;
-    } catch (error) {
-      console.error("Error creating strategy vault:", error);
-      if (error.logs) {
-        console.error("Transaction logs:", error.logs);
-      }
-      throw error;
-    }
-}
   async getStrategyVault(mint: PublicKey, riskLevel: number) {
     const [strategyVaultPDA] = await this.getStrategyVaultAddress(mint, riskLevel);
     return await this.program.account.strategyVault.fetch(strategyVaultPDA);
@@ -275,7 +285,7 @@ async createMint({ authority }: { authority: Keypair }): Promise<PublicKey> {
         strategyVault: strategyVaultPDA,
         depositorAccount: depositorPDA,
         vaultTokenAccount,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId
       })
