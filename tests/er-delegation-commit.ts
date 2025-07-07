@@ -177,7 +177,7 @@ describe("Ephemeral Rollup Delegation and Commit Tests", () => {
     }
 });
 
-  it.skip("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
+  it("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
     // Get The PDA
     const riskLevel = 1;
     const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
