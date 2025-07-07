@@ -7,7 +7,7 @@
     "test:er": "ANCHOR_PROVIDER_URL=https://api.devnet.solana.com ANCHOR_WALLET=arbitrage-wallet.json ts-mocha -p ./tsconfig.json -t 1000000 tests/er-delegation-commit.ts",
     "test:er:full": "ts-node tests/run-er-tests.ts",
     "sim:setup": "ts-node simulate/0_setup_devnet.ts",
-    "sim:create-strategy": "ts-node simulate/1_create_strategy.ts",
+    "sim:create-strategy": "ts-node simulate/2_create_strategy.ts",
     "sim:deposit": "ts-node simulate/2_deposit.ts",
     "sim:withdraw": "ts-node simulate/3_withdraw.ts",
     "sim:arbitrage": "ts-node simulate/4_execute_arbitrage.ts",

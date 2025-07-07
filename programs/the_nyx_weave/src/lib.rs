@@ -14,7 +14,7 @@ pub use state::*;
 pub use instructions::*;
 pub use error::*;
 
-declare_id!("9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz");
+declare_id!("CU8H5mnb1CdmJJiQj5AkowMRFWt7boSwKar6DxS5VUiu");
 
 #[ephemeral]
 #[program]
@@ -98,6 +98,11 @@ pub mod the_nyx_weave {
     pub fn claim_profit(ctx: Context<ClaimProfit>, risk_level: u8) -> Result<()> {
         instructions::claim_profit(ctx, risk_level)?;
      
+        Ok(())
+    }
+
+    pub fn update_admin(ctx: Context<AdminInfo>, admin_pubkey: Pubkey) -> Result<()> {
+        instructions::update_admin(ctx, admin_pubkey)?;
         Ok(())
     }
 

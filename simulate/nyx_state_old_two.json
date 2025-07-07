@@ -1,0 +1,55 @@
+{
+  "admin": "3k5ckxkThQ2F7r8ZcS5RFsQNxnuu5beBuNTW7vXm8R4h",
+  "administrators": "EGBhLchcVgxFrrRc1DGdx6j1Xcpkb6PSN5CJBAdXb3QH",
+  "globalConfig": "8KTwAbjjURUB9WvBy4dQxjCotxrXt3beZKGdHsN4WSMD",
+  "treasuryVault": "BwwHdpcgTtSf9mFEhEAZc48UHqzApKD7VcZ2c2NMpg1Y",
+  "usdcMint": "BwVL4tR6QKJTULAwqTd9yems2nEHhj6gWpak6QnkfwcH",
+  "strategyVaults": {},
+  "depositors": {},
+  "ammWallets": {
+    "main": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew"
+  },
+  "users": {
+    "ammWallet": {
+      "pubkey": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew",
+      "usdcTokenAccount": "7jwK48MDTSNhPzRk1creN58ayAUat2kZQDYQBGMuTkLw",
+      "usdcBalance": 1000000
+    },
+    "testUser1": {
+      "pubkey": "9HgLXWgRwJySS2KDi25FWbkoURPvo6TgnBbEui3s6pvY",
+      "usdcTokenAccount": "9q8vjGWkUpmsBuj985hqNEvWwcqMLKkNJ9i3RdDW5etp",
+      "usdcBalance": 10000
+    },
+    "testUser2": {
+      "pubkey": "9gqsRMRhaaSwPr5F3Fm8Hmtpqy3pWAxFT78kdCLtmDxw",
+      "usdcTokenAccount": "CzbiFo49MsNNhKpwSmjBc1JJAvuDoGTJJnYhzB1b6KF3",
+      "usdcBalance": 15000
+    },
+    "testUser3": {
+      "pubkey": "B5oV1x87Csa5z76yECQsqegYpySLC3cyi3cePMNaZyQX",
+      "usdcTokenAccount": "CUR2x5r8ACRvXJsTYv96RauJ9dKCV8Cr7vjsKF4xU5Kh",
+      "usdcBalance": 20000
+    },
+    "testUser4": {
+      "pubkey": "9eAThdrVWsNMHZFXpTRuUkeTrJPwqqsUCecNC7rAgkRA",
+      "usdcTokenAccount": "8enRC7psQTJBwa7VaJ2RjPZrXhSyFyahQ3Dk38NWchsL",
+      "usdcBalance": 25000
+    },
+    "testUser5": {
+      "pubkey": "2Hn5jxqqkUNep5c5w7nNwsZBgXMRGjM4KnNPLhrhdE9U",
+      "usdcTokenAccount": "A71j4XVEFaj67qWzvPMvh3iqj2VvzdAcJ73TosCkm9Ge",
+      "usdcBalance": 30000
+    },
+    "admin": {
+      "pubkey": "gBNwrB6w5gkQPEu72fBQWcfzCbGgMnH38EpmqYKH3xy",
+      "usdcTokenAccount": "46LHevudhGBRHkkguhsLRhAys1YRcTrEe37jXyaqfdeu",
+      "usdcBalance": 0
+    },
+    "deployer": {
+      "pubkey": "FZCJkMxcV7sS4V1BUAfGsSwj9M5briZ3ujkbhm35jiMF",
+      "usdcTokenAccount": "DmVnLDHjrzEwaRMt6WsUh8UhzTSJcqX8iK7jfxn7rGaG",
+      "usdcBalance": 0
+    }
+  },
+  "lastUpdate": 1751848726672
+}

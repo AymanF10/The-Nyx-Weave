@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Connection, Keypair, PublicKey, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
 import * as spl from "@solana/spl-token";
-import { NyxWeaveClient } from "../sdk/nyx-weave-client";
+import { NyxClient } from "../sdk/nyx-weave-client";
 import { loadKeypair, saveKeypair, formatTokenAmount, toRawAmount } from "./util";
 import * as fs from 'fs';
 import * as path from 'path';
@@ -119,7 +119,7 @@ async function main() {
   anchor.setProvider(provider);
 
   console.log("\n🔧 Initializing Nyx-Weave client...");
-  const client = new NyxWeaveClient(provider);
+  const client = new NyxClient(provider);
 
   // Check and fund balances
   console.log("\n💰 Checking Account Balances...");
@@ -241,7 +241,7 @@ async function main() {
       const administratorsExists = await client.accountExists(administratorsPda);
       
       if (!administratorsExists) {
-        const initAdminTx = await client.initializeAdministrators(admin.publicKey);
+        const initAdminTx = await client.initAdmins(admin.publicKey);
         console.log("✅ Administrators initialized:", initAdminTx);
       } else {
         console.log("ℹ️ Administrators already initialized");
@@ -261,11 +261,12 @@ async function main() {
       const globalConfigExists = await client.accountExists(globalConfigPda);
       
       if (!globalConfigExists) {
-        const initConfigTx = await client.initializeConfigTreasury(
+        const initConfigTx = await client.initGlobalConfig({          
           admin,
-          1000, // feeBps: 10%
-          1000, // minProfitThreshold: 0.001 tokens
-          2     // maxRetries
+          feeBps: 1000, // feeBps: 10%
+          minProfitThreshold: 1000, // minProfitThreshold: 0.001 tokens
+          maxRetries: 2     // maxRetries
+          }
         );
         console.log("✅ Global config initialized:", initConfigTx);
       } else {
@@ -286,13 +287,7 @@ async function main() {
   if (!state.usdcMint) {
     console.log("Creating new USDC mint...");
     try {
-      usdcMint = await spl.createMint(
-        connection,
-        admin,
-        admin.publicKey,
-        null,
-        6 // decimals
-      );
+      usdcMint = await client.createMint({ authority: admin });
       state.usdcMint = usdcMint.toBase58();
       console.log("✅ USDC mint created:", usdcMint.toBase58());
     } catch (error) {
@@ -491,22 +486,30 @@ async function main() {
         const strategyVaultExists = await client.accountExists(strategyVaultPda);
         
         if (!strategyVaultExists) {
-          const createStrategyTx = await client.createStrategy(
+          const createStrategyTx = await client.createStrategyVault({
             admin,
-            new PublicKey(state.usdcMint),
+            mint: new PublicKey(state.usdcMint || "Fhbg8rGkU2EqKbDcEemescDcpQCZerNhmCK2QgcEFeGx"),
             riskLevel
+          }
           );
           console.log(`✅ Strategy vault created for risk level ${riskLevel}:`, createStrategyTx);
         } else {
-          console.log(`ℹ️ Strategy vault for risk level ${riskLevel} already exists`);
+          console.log(`ℹ️ Strategy vault for risk level ${riskLevel} already exists, adding pda ${strategyVaultPda.toBase58()}`);
         }
         
         state.strategyVaults[vaultKey] = strategyVaultPda.toBase58();
       } catch (error) {
-        console.log(`ℹ️ Strategy vault for risk level ${riskLevel} already exists`);
+        console.log(`ℹ️ Error creating strategy vault for risk level ${riskLevel}:`, error);
+        // const [strategyVaultPda] = await client.getStrategyVaultAddress(new PublicKey(state.usdcMint), riskLevel);
+        // console.log(`ℹ️ Strategy vault for risk level ${riskLevel} already exists, adding pda ${strategyVaultPda.toBase58()}`);
+        // state.strategyVaults[vaultKey] = strategyVaultPda.toBase58();
       }
     }
   }
+
+  state.treasuryVault = (await client.getTreasuryVaultAddress())[0].toBase58();
+  const adminInGlobalConfig = (await client.getGlobalConfig()).admin.toBase58();
+  state.admin = adminInGlobalConfig;
 
   // Save state
   state.lastUpdate = Date.now();

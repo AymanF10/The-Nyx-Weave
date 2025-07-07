@@ -8,183 +8,1388 @@
   },
   "instructions": [
     {
-      "name": "createStrategy",
-      "accounts": [
-        {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "admins",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "globalConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "depositTokenMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "strategyVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
+      "name": "claim_profit",
+      "discriminator": [
+        234,
+        73,
+        53,
+        22,
+        182,
+        46,
+        83,
+        104
       ],
-      "args": [
-        {
-          "name": "riskLevel",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "initAdmins",
-      "accounts": [
-        {
-          "name": "deployer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "adminPubkey",
-          "type": "publicKey"
-        }
-      ]
-    },
-    {
-      "name": "initConfigTreasury",
-      "accounts": [
-        {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "administrators",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "globalConfig",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "treasuryVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "feeBps",
-          "type": "u64"
-        },
-        {
-          "name": "minProfitThreshold",
-          "type": "u64"
-        },
-        {
-          "name": "maxRetries",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "userDeposit",
       "accounts": [
         {
           "name": "depositor",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "depositToken",
-          "isMut": false,
-          "isSigner": false
+          "name": "deposit_token",
+          "writable": true
         },
         {
-          "name": "depositorTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "depositor_token_account",
+          "writable": true
         },
         {
-          "name": "depositorAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token"
+              },
+              {
+                "kind": "arg",
+                "path": "risk_level"
+              }
+            ]
+          }
         },
         {
-          "name": "strategyVault",
-          "isMut": true,
-          "isSigner": false
+          "name": "treasury_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "vaultTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "depositor_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "depositor"
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token"
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              }
+            ]
+          }
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "treasury_vault_token_account",
+          "writable": true
         },
         {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "strategy_vault_token_account",
+          "writable": true
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "global_config",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "riskLevel",
+          "name": "risk_level",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "commit_arbitrage_and_undelegate",
+      "discriminator": [
+        207,
+        185,
+        187,
+        232,
+        1,
+        219,
+        13,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admins",
+          "docs": [
+            "The administrator account containing authorized admins",
+            "Used to verify the signer has admin privileges"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  111,
+                  114,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault.deposit_token_mint",
+                "account": "StrategyVault"
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault.risk_level",
+                "account": "StrategyVault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault.deposit_token_mint",
+                "account": "StrategyVault"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "commit_arbitrage_no_undelegate",
+      "discriminator": [
+        232,
+        226,
+        81,
+        10,
+        134,
+        139,
+        84,
+        26
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admins",
+          "docs": [
+            "The administrator account containing authorized admins",
+            "Used to verify the signer has admin privileges"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  111,
+                  114,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault.deposit_token_mint",
+                "account": "StrategyVault"
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault.risk_level",
+                "account": "StrategyVault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault.deposit_token_mint",
+                "account": "StrategyVault"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_strategy",
+      "docs": [
+        "Create a new trading strategy with specified parameters",
+        "Each strategy has its own risk profile and capital pool"
+      ],
+      "discriminator": [
+        152,
+        160,
+        107,
+        148,
+        245,
+        190,
+        127,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "The admin creating the strategy",
+            "Must be in the administrators list"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admins",
+          "docs": [
+            "The administrator account containing authorized admins",
+            "Used to verify the signer has admin privileges"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  111,
+                  114,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "The global configuration account",
+            "Contains platform-wide settings"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "deposit_token_mint",
+          "docs": [
+            "The token mint that will be used for this strategy",
+            "Determines which token can be deposited and traded"
+          ]
+        },
+        {
+          "name": "strategy_vault",
+          "docs": [
+            "The strategy vault account being created",
+            "Stores strategy-specific parameters and state"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token_mint"
+              },
+              {
+                "kind": "arg",
+                "path": "risk_level"
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy_vault_token_account",
+          "docs": [
+            "The token account owned by the strategy vault",
+            "Holds deposited tokens for trading"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_vault_token_account",
+          "docs": [
+            "The token account owned by the treasury vault",
+            "Holds profit tokens for trading"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "treasury_vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Required for token operations"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Required for creating associated token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Required by Solana for creating new accounts"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "risk_level",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "delegate_strategy",
+      "discriminator": [
+        64,
+        128,
+        185,
+        199,
+        116,
+        186,
+        103,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buffer_strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                130,
+                60,
+                132,
+                225,
+                62,
+                40,
+                109,
+                122,
+                194,
+                49,
+                142,
+                35,
+                236,
+                66,
+                237,
+                88,
+                45,
+                171,
+                207,
+                18,
+                133,
+                181,
+                12,
+                173,
+                24,
+                136,
+                88,
+                18,
+                51,
+                44,
+                217,
+                99
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "strategy_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "token"
+              },
+              {
+                "kind": "arg",
+                "path": "risk_level"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buffer_vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault_token_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                130,
+                60,
+                132,
+                225,
+                62,
+                40,
+                109,
+                122,
+                194,
+                49,
+                142,
+                35,
+                236,
+                66,
+                237,
+                88,
+                45,
+                171,
+                207,
+                18,
+                133,
+                181,
+                12,
+                173,
+                24,
+                136,
+                88,
+                18,
+                51,
+                44,
+                217,
+                99
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault_token_account"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault_token_account"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "arg",
+                "path": "token"
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_program",
+          "address": "9mPXPz9nnih8hbFBtNgsiVnysE1RD1ciUDkucwLmafAz"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token",
+          "type": "pubkey"
+        },
+        {
+          "name": "risk_level",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "execute_arbitrage_mock",
+      "docs": [
+        "Execute an arbitrage operation for a given risk level",
+        "This will transfer the profit from the strategy vault to the treasury vault",
+        "and update the depositor account with the new profit"
+      ],
+      "discriminator": [
+        137,
+        62,
+        226,
+        5,
+        34,
+        147,
+        113,
+        247
+      ],
+      "accounts": [
+        {
+          "name": "amm_wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "profit_token",
+          "writable": true
+        },
+        {
+          "name": "strategy_vault",
+          "writable": true
+        },
+        {
+          "name": "treasury_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "amm_wallet_token_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_vault_token_account",
+          "writable": true
+        },
+        {
+          "name": "strategy_vault_token_account",
+          "writable": true
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "risk_level",
           "type": "u8"
         },
         {
@@ -194,57 +1399,558 @@
       ]
     },
     {
-      "name": "userWithdraw",
+      "name": "init_admins",
+      "docs": [
+        "Initialize the administrator account with the first admin",
+        "This must be called before other initialization steps"
+      ],
+      "discriminator": [
+        167,
+        72,
+        158,
+        202,
+        115,
+        142,
+        106,
+        3
+      ],
       "accounts": [
         {
-          "name": "depositor",
-          "isMut": true,
-          "isSigner": true
+          "name": "deployer",
+          "docs": [
+            "The deployer who is creating the admin account",
+            "Pays for the transaction and account creation"
+          ],
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "depositToken",
-          "isMut": false,
-          "isSigner": false
+          "name": "admin",
+          "docs": [
+            "The administrator account being initialized",
+            "Stores the list of authorized admin public keys"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  111,
+                  114,
+                  115
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "depositorTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "depositorAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "strategyVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "system_program",
+          "docs": [
+            "Required by Solana for creating new accounts"
+          ],
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "riskLevel",
+          "name": "admin_pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "init_config_treasury",
+      "docs": [
+        "Initialize the platform by creating the global configuration account",
+        "This is the first instruction that must be called before using the platform"
+      ],
+      "discriminator": [
+        223,
+        132,
+        83,
+        208,
+        12,
+        175,
+        209,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "The admin initializing the platform",
+            "Must be in the administrators list"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "administrators",
+          "docs": [
+            "The administrator account containing authorized admins",
+            "Used to verify the signer has admin privileges"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  111,
+                  114,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "The global configuration account being initialized",
+            "Stores platform-wide parameters"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_vault",
+          "docs": [
+            "The treasury vault account being initialized",
+            "Manages platform profits and distributions"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Required by Solana for creating new accounts"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_bps",
+          "type": "u64"
+        },
+        {
+          "name": "min_profit_threshold",
+          "type": "u64"
+        },
+        {
+          "name": "max_retries",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "process_undelegation",
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "base_account",
+          "writable": true
+        },
+        {
+          "name": "buffer"
+        },
+        {
+          "name": "payer",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_seeds",
+          "type": {
+            "vec": "bytes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "user_deposit",
+      "discriminator": [
+        186,
+        198,
+        140,
+        233,
+        129,
+        39,
+        98,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "docs": [
+            "The user making the deposit or withdrawal",
+            "Signs the transaction and pays for any account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "deposit_token",
+          "docs": [
+            "The token mint being deposited or withdrawn",
+            "Must match the strategy vault's deposit token"
+          ]
+        },
+        {
+          "name": "depositor_token_account",
+          "docs": [
+            "The user's token account",
+            "Source for deposits and destination for withdrawals"
+          ],
+          "writable": true
+        },
+        {
+          "name": "depositor_account",
+          "docs": [
+            "The account tracking this user's deposits",
+            "Created if this is the user's first deposit"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "depositor"
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token"
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy_vault",
+          "docs": [
+            "The strategy vault receiving the deposit or processing the withdrawal",
+            "Must be active for deposits and not delegated for withdrawals"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token"
+              },
+              {
+                "kind": "arg",
+                "path": "risk_level"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token_account",
+          "docs": [
+            "The token account owned by the strategy vault",
+            "Destination for deposits and source for withdrawals"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Required for token operations"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Required for creating associated token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Required by Solana for creating new accounts"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "risk_level",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "user_withdraw",
+      "docs": [
+        "Allow users to withdraw their funds from a strategy"
+      ],
+      "discriminator": [
+        53,
+        254,
+        26,
+        242,
+        119,
+        237,
+        73,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "docs": [
+            "The user making the deposit or withdrawal",
+            "Signs the transaction and pays for any account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "deposit_token",
+          "docs": [
+            "The token mint being deposited or withdrawn",
+            "Must match the strategy vault's deposit token"
+          ]
+        },
+        {
+          "name": "depositor_token_account",
+          "docs": [
+            "The user's token account",
+            "Source for deposits and destination for withdrawals"
+          ],
+          "writable": true
+        },
+        {
+          "name": "depositor_account",
+          "docs": [
+            "The account tracking this user's deposits",
+            "Created if this is the user's first deposit"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "depositor"
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token"
+              },
+              {
+                "kind": "account",
+                "path": "strategy_vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "strategy_vault",
+          "docs": [
+            "The strategy vault receiving the deposit or processing the withdrawal",
+            "Must be active for deposits and not delegated for withdrawals"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  101,
+                  103,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deposit_token"
+              },
+              {
+                "kind": "arg",
+                "path": "risk_level"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token_account",
+          "docs": [
+            "The token account owned by the strategy vault",
+            "Destination for deposits and source for withdrawals"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Required for token operations"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Required for creating associated token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Required by Solana for creating new accounts"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "risk_level",
           "type": "u8"
         },
         {
@@ -257,238 +1963,147 @@
   "accounts": [
     {
       "name": "Administrator",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "administrators",
-            "type": {
-              "vec": "publicKey"
-            }
-          },
-          {
-            "name": "administratorsBump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        17,
+        227,
+        133,
+        8,
+        44,
+        57,
+        118,
+        110
+      ]
     },
     {
       "name": "DepositorAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "depositor",
-            "type": "publicKey"
-          },
-          {
-            "name": "totalAmountDeposited",
-            "type": "u64"
-          },
-          {
-            "name": "lastDepositTime",
-            "type": "i64"
-          },
-          {
-            "name": "depositorBump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        164,
+        157,
+        211,
+        72,
+        168,
+        114,
+        225,
+        125
+      ]
     },
     {
       "name": "GlobalConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "feeBps",
-            "type": "u64"
-          },
-          {
-            "name": "admin",
-            "type": "publicKey"
-          },
-          {
-            "name": "maxRetries",
-            "type": "u8"
-          },
-          {
-            "name": "minProfitThreshold",
-            "type": "u64"
-          },
-          {
-            "name": "globalConfigBump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
     },
     {
       "name": "StrategyVault",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "depositTokenMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "totalDeposits",
-            "type": "u64"
-          },
-          {
-            "name": "createdAt",
-            "type": "i64"
-          },
-          {
-            "name": "riskLevel",
-            "type": "u8"
-          },
-          {
-            "name": "isActive",
-            "type": "bool"
-          },
-          {
-            "name": "isDelegated",
-            "type": "bool"
-          },
-          {
-            "name": "strategyVaultBump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        159,
+        204,
+        238,
+        219,
+        38,
+        201,
+        136,
+        177
+      ]
     },
     {
       "name": "TreasuryVault",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "treasuryAdmin",
-            "type": "publicKey"
-          },
-          {
-            "name": "totalProfitsSecured",
-            "type": "u64"
-          },
-          {
-            "name": "totalProfitsDistributed",
-            "type": "u64"
-          },
-          {
-            "name": "lastDistributionTime",
-            "type": "i64"
-          },
-          {
-            "name": "treasuryVaultBump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        86,
+        102,
+        19,
+        109,
+        56,
+        58,
+        144,
+        81
+      ]
     }
   ],
   "events": [
     {
       "name": "DepositEvent",
-      "fields": [
-        {
-          "name": "depositor",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "depositToken",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "amount",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "timestamp",
-          "type": "i64",
-          "index": false
-        }
+      "discriminator": [
+        120,
+        248,
+        61,
+        83,
+        31,
+        142,
+        107,
+        144
       ]
     },
     {
       "name": "InitializeEvent",
-      "fields": [
-        {
-          "name": "admin",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "feeBps",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "minProfitThreshold",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "maxRetries",
-          "type": "u8",
-          "index": false
-        }
+      "discriminator": [
+        206,
+        175,
+        169,
+        208,
+        241,
+        210,
+        35,
+        221
+      ]
+    },
+    {
+      "name": "ProfitClaimedEvent",
+      "discriminator": [
+        104,
+        184,
+        5,
+        60,
+        28,
+        200,
+        147,
+        177
+      ]
+    },
+    {
+      "name": "ProfitTransferredEvent",
+      "discriminator": [
+        181,
+        17,
+        237,
+        255,
+        49,
+        20,
+        57,
+        219
       ]
     },
     {
       "name": "StrategyCreatedEvent",
-      "fields": [
-        {
-          "name": "strategyVault",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "depositTokenMint",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "riskLevel",
-          "type": "u8",
-          "index": false
-        },
-        {
-          "name": "createdAt",
-          "type": "i64",
-          "index": false
-        }
+      "discriminator": [
+        203,
+        154,
+        137,
+        124,
+        155,
+        239,
+        192,
+        20
       ]
     },
     {
       "name": "WithdrawEvent",
-      "fields": [
-        {
-          "name": "depositor",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "withdrawToken",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "amount",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "withdrawalTime",
-          "type": "i64",
-          "index": false
-        }
+      "discriminator": [
+        22,
+        9,
+        133,
+        26,
+        160,
+        44,
+        71,
+        192
       ]
     }
   ],
@@ -597,6 +2212,469 @@
       "code": 6020,
       "name": "OperationNotAllowed",
       "msg": "Operation not allowed in current state"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidVaultState",
+      "msg": "Vault is in an invalid state"
+    }
+  ],
+  "types": [
+    {
+      "name": "Administrator",
+      "docs": [
+        "Administrator account for platform governance",
+        "Stores the list of admin public keys with privileged access"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "administrators",
+            "docs": [
+              "List of administrator public keys authorized to perform privileged operations",
+              "Limited to a maximum of 3 administrators for security and governance"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "administrators_bump",
+            "docs": [
+              "This account's bump seed for PDA verification"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositEvent",
+      "docs": [
+        "Event emitted when a user makes a deposit",
+        "Records deposit details for transparency and tracking"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "docs": [
+              "The user who made the deposit"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "deposit_token",
+            "docs": [
+              "The token mint that was deposited"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "The amount of tokens deposited"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Timestamp when the deposit was made"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositorAccount",
+      "docs": [
+        "Account tracking individual user deposits in the platform",
+        "Maintains deposit history and balances for a specific user"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "docs": [
+              "The public key of the depositor who owns this account",
+              "Used for verification and attribution of deposits"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_amount_deposited",
+            "docs": [
+              "Total amount of tokens deposited by this user",
+              "Tracks the user's total contribution to the strategy"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_deposit_time",
+            "docs": [
+              "Timestamp of the user's most recent deposit",
+              "Useful for analytics and time-based features"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "depositor_bump",
+            "docs": [
+              "This account's bump seed for PDA verification"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "docs": [
+        "Global configuration for the Intra-Pool Arbitrage Platform",
+        "Controls platform-wide parameters and administrative settings"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fee_bps",
+            "docs": [
+              "Platform fee percentage in basis points (0.01% increments)",
+              "Allows flexible fee adjustment without code modifications"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "The authority that can update this config and manage the platform"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "max_retries",
+            "docs": [
+              "Maximum number of transaction retry attempts",
+              "Provides configurable resilience for trade execution"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "min_profit_threshold",
+            "docs": [
+              "Minimum profit threshold for executing trades",
+              "Prevents executing trades with negligible returns"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "global_config_bump",
+            "docs": [
+              "This account's bump seed for verification"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeEvent",
+      "docs": [
+        "Event emitted when the platform is initialized",
+        "Records the initial configuration parameters"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "The admin who initialized the platform"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_bps",
+            "docs": [
+              "The initial fee percentage in basis points"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_profit_threshold",
+            "docs": [
+              "The initial minimum profit threshold"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_retries",
+            "docs": [
+              "The initial maximum retry count"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProfitClaimedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "deposit_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProfitTransferredEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amm_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "profit_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyCreatedEvent",
+      "docs": [
+        "Event emitted when a new strategy is created",
+        "Records the strategy parameters and creation time"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "strategy_vault",
+            "docs": [
+              "The public key of the created strategy vault"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "deposit_token_mint",
+            "docs": [
+              "The token mint used for this strategy"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "risk_level",
+            "docs": [
+              "The risk level of the strategy"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Timestamp when the strategy was created"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StrategyVault",
+      "docs": [
+        "Strategy vault for managing trading capital and strategy parameters",
+        "Each vault represents a specific trading strategy with its own risk profile"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "deposit_token_mint",
+            "docs": [
+              "The token mint used for deposits in this strategy",
+              "Determines which token can be deposited and traded"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_deposits",
+            "docs": [
+              "Total amount of tokens deposited into this strategy",
+              "Tracks the total capital available for trading"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Timestamp when the strategy was created",
+              "Useful for tracking strategy performance over time"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "risk_level",
+            "docs": [
+              "Risk level of the strategy (higher = more aggressive)",
+              "Determines trading parameters and risk tolerance"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "is_active",
+            "docs": [
+              "Whether the strategy is currently active",
+              "Inactive strategies cannot accept new deposits"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "is_delegated",
+            "docs": [
+              "Whether the strategy is currently delegated to a trading bot",
+              "Prevents withdrawals during active trading sessions"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "total_profit",
+            "docs": [
+              "Total profit earned by the strategy",
+              "Tracks the total profit generated by the strategy"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "strategy_vault_bump",
+            "docs": [
+              "This account's bump seed for PDA verification"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryVault",
+      "docs": [
+        "Treasury vault for managing platform profits and distributions",
+        "Centralizes profit collection and distribution to stakeholders"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "treasury_admin",
+            "docs": [
+              "The admin public key authorized to manage treasury operations",
+              "Controls profit distribution and treasury management"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_profits_secured",
+            "docs": [
+              "Total amount of profits secured by the platform",
+              "Tracks all profits ever generated across all strategies"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_profits_distributed",
+            "docs": [
+              "Total amount of profits distributed to stakeholders",
+              "Tracks how much profit has been paid out"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_distribution_time",
+            "docs": [
+              "Timestamp of the last profit distribution",
+              "Used to schedule regular distributions"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "treasury_vault_bump",
+            "docs": [
+              "This account's bump seed for PDA verification"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawEvent",
+      "docs": [
+        "Event emitted when a user makes a withdrawal",
+        "Records withdrawal details for transparency and tracking"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "docs": [
+              "The user who made the withdrawal"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "withdraw_token",
+            "docs": [
+              "The token mint that was withdrawn"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "The amount of tokens withdrawn"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "withdrawal_time",
+            "docs": [
+              "Timestamp when the withdrawal was made"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
     }
   ]
 }
