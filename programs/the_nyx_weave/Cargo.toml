@@ -22,4 +22,14 @@ anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
 ephemeral-rollups-sdk = { version = "0.2.5", features = ["anchor"] }
 cpi-example = { git = "https://github.com/MeteoraAg/cpi-examples.git", features = ["cpi"] }
+bytemuck = { version = "1.13.1", features = ["derive", "min_const_generics"] }
 
+[dev-dependencies]
+solana-program-test = "2.1.*"
+solana-sdk = "2.1.*"
+assert_matches = "1.5.0"
+solana-client = "2.1.*"
+solana-account-decoder = "2.1.*"
+bincode = "1.3.3"
+spl-associated-token-account = "6.0.0"
+lazy_static = "1.5.0"

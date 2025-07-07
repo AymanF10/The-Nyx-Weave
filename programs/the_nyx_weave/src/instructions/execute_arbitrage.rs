@@ -1,14 +1,11 @@
+// https://github.com/coral-xyz/anchor/issues/3401#issuecomment-2513466441
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
-use cpi_example::dlmm_cpi::dlmm_swap::handle_dlmm_swap;
-use cpi_example::dlmm_cpi::dlmm_swap::DlmmSwap;
-use cpi_example::dlmm_cpi::dlmm_swap::DlmmSwapBumps;
+use cpi_example::dlmm_cpi::dlmm_swap::*;
 
-
-#[derive(Accounts, AnchorSerialize, AnchorDeserialize)]
+#[derive(Accounts)]
 pub struct ExecuteArbitrage<'info> {
-    #[account()]
     pub pool_a: DlmmSwap<'info>, // Buy from lower-priced pool
-    #[account()]
     pub pool_b: DlmmSwap<'info>, // Sell to higher-priced pool
     #[account(mut)]
     pub user: Signer<'info>,
