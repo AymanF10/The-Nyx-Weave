@@ -4,10 +4,12 @@ import {
   getOrCreateAssociatedTokenAccount,
   getAssociatedTokenAddressSync,
   mintTo,
-  TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
   createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { PublicKey, Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { TheNyxWeave } from "../target/types/the_nyx_weave";
@@ -22,16 +24,13 @@ export class NyxClient {
   readonly provider: AnchorProvider;
   readonly program: Program<TheNyxWeave>;
 
-  static async init(config: NyxClientConfig): Promise<NyxClient> {
-    const idl = await Program.fetchIdl<TheNyxWeave>(config.programId, config.provider);
-    if (!idl) throw new Error("Unable to fetch IDL for NyxWeave");
-    const program = new Program(idl, config.programId, config.provider);
-    return new NyxClient(config.provider);
-  }
-
   constructor(provider: AnchorProvider) {
     this.provider = provider;
     this.program = anchor.workspace.the_nyx_weave as Program<TheNyxWeave>;
+  }
+
+  async getProgramId(): Promise<PublicKey> {
+    return this.program.programId;
   }
 
   async airdrop(pubkeys: PublicKey[], solAmount = 1) {
@@ -41,9 +40,74 @@ export class NyxClient {
     }
   }
 
-  async createMint({ authority }: { authority: Keypair }): Promise<PublicKey> {
-    return await createMint(this.provider.connection, authority, authority.publicKey, null, 6);
+    // Helper to derive PDA addresses
+    async getAdministratorsAddress(): Promise<[PublicKey, number]> {
+      return PublicKey.findProgramAddressSync(
+        [Buffer.from("administrators")],
+        this.program.programId
+      );
+    }
+  
+    async getGlobalConfigAddress(): Promise<[PublicKey, number]> {
+      return PublicKey.findProgramAddressSync(
+        [Buffer.from("global_config")],
+        this.program.programId
+      );
+    }
+  
+    async getTreasuryVaultAddress(): Promise<[PublicKey, number]> {
+      return PublicKey.findProgramAddressSync(
+        [Buffer.from("treasury_vault")],
+        this.program.programId
+      );
+    }
+
+      // Check if an account exists
+  async accountExists(address: PublicKey): Promise<boolean> {
+    const accountInfo = await this.provider.connection.getAccountInfo(address);
+    return accountInfo !== null;
   }
+
+  // Fetch raw account data
+  async getRawAccountData(address: PublicKey): Promise<Buffer | null> {
+    const accountInfo = await this.provider.connection.getAccountInfo(address);
+    return accountInfo ? accountInfo.data : null;
+  }
+
+  // Simple account fetch methods that return the raw data
+  async getAdministrators(): Promise<any> {
+    const [administratorsPda] = await this.getAdministratorsAddress();
+    const data = await this.getRawAccountData(administratorsPda);
+    if (!data) throw new Error("Administrators account not found");
+    
+    // For now, just return that the account exists
+    // You can add proper deserialization later
+    return { exists: true, address: administratorsPda.toBase58() };
+  }
+
+  async getTreasuryVault(): Promise<any> {
+    const [treasuryVaultPda] = await this.getTreasuryVaultAddress();
+    const data = await this.getRawAccountData(treasuryVaultPda);
+    if (!data) throw new Error("Treasury vault account not found");
+    
+    return { exists: true, address: treasuryVaultPda.toBase58() };
+  }
+
+async createMint({ authority }: { authority: Keypair }): Promise<PublicKey> {
+  if (!authority || !authority.publicKey) {
+    throw new Error("Authority Keypair is required for mint creation");
+  }
+  return await createMint(
+    this.provider.connection, 
+    authority, 
+    authority.publicKey, 
+    null, 
+    6,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID
+  );
+}
 
   async getOrCreateATA(mint: PublicKey, owner: Keypair) {
     return await getOrCreateAssociatedTokenAccount(
@@ -62,13 +126,13 @@ export class NyxClient {
     await mintTo(this.provider.connection, authority, mint, dest, authority.publicKey, amount, [authority]);
   }
 
-  async initAdmins(admin: Keypair) {
+  async initAdmins(admin: PublicKey) {
     const [adminPDA] = PublicKey.findProgramAddressSync([
       Buffer.from("administrators")
     ], this.program.programId);
 
-    await this.program.methods
-      .initAdmins(admin.publicKey)
+    return await this.program.methods
+      .initAdmins(admin)
       .accountsPartial({ admin: adminPDA })
       .rpc();
   }
@@ -82,7 +146,7 @@ export class NyxClient {
   }
 
   async initGlobalConfig({ admin, feeBps, minProfitThreshold, maxRetries }: { admin: Keypair; feeBps: number; minProfitThreshold: number; maxRetries: number; }) {
-    await this.program.methods
+    return await this.program.methods
       .initConfigTreasury(new BN(feeBps), new BN(minProfitThreshold), maxRetries)
       .accounts({
         admin: admin.publicKey
@@ -98,39 +162,92 @@ export class NyxClient {
     return await this.program.account.globalConfig.fetch(pda);
   }
 
-  async createStrategyVault({ admin, mint, riskLevel }: { admin: Keypair; mint: PublicKey; riskLevel: number; }) {
-    const [adminPDA] = PublicKey.findProgramAddressSync([
-      Buffer.from("administrators")
-    ], this.program.programId);
+  async createStrategyVault({
+    admin,
+    mint,
+    riskLevel
+  }: {
+    admin: Keypair;
+    mint: PublicKey;
+    riskLevel: number;
+  }) {
+        // Get PDAs
+        const [adminPDA, adminPDABump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("administrators")],
+          this.program.programId
+        );
+    
+        const [globalConfigPDA, globalConfigBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("global_config")],
+          this.program.programId
+        );
 
-    const [strategyVaultPDA] = PublicKey.findProgramAddressSync([
-      Buffer.from("strategy_vault"),
-      mint.toBuffer(),
-      Buffer.from([riskLevel])
-    ], this.program.programId);
+        const [treasuryVaultPDA, treasuryVaultBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("treasury_vault")],
+          this.program.programId
+        );
+    
+    
+    
+        const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+          [Buffer.from("strategy_vault"), mint.toBuffer(), Buffer.from([riskLevel])],
+          this.program.programId
+        );
 
-    await this.program.methods
-      .createStrategy(riskLevel)
-      .accountsPartial({
-        admin: admin.publicKey,
-        admins: adminPDA,
-        depositTokenMint: mint,
-        strategyVault: strategyVaultPDA,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([admin])
-      .rpc();
+        console.log("!!!!!!!!      strategyVaultPDA", strategyVaultPDA.toBase58());
+        console.log("!!!!!!!!      mint", mint.toBase58());
+        console.log("!!!!!!!!      riskLevel", riskLevel);
+    
+        const vaultTokenAccount = await getAssociatedTokenAddressSync(
+          mint,
+          strategyVaultPDA,
+          true,
+          TOKEN_2022_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+
+        const treasuryVaultTokenAccount = await getAssociatedTokenAddressSync(
+          mint,
+          treasuryVaultPDA,
+          true,
+          TOKEN_2022_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+        
+        // Call instruction
+        await this.program.methods
+          .createStrategy(riskLevel)
+          .accountsStrict({
+            admin: admin.publicKey,
+            //@ts-ignore
+            admins: adminPDA,
+            globalConfig: globalConfigPDA,
+            depositTokenMint: mint,
+            // @ts-ignore
+            strategyVault: strategyVaultPDA,
+            strategyVaultTokenAccount: vaultTokenAccount,
+            treasuryVault: treasuryVaultPDA,
+            treasuryVaultTokenAccount: treasuryVaultTokenAccount,
+    
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([admin])
+          .rpc();
   }
 
   async getStrategyVault(mint: PublicKey, riskLevel: number) {
-    const [strategyVaultPDA] = PublicKey.findProgramAddressSync([
+    const [strategyVaultPDA] = await this.getStrategyVaultAddress(mint, riskLevel);
+    return await this.program.account.strategyVault.fetch(strategyVaultPDA);
+  }
+
+  async getStrategyVaultAddress(mint: PublicKey, riskLevel: number) {
+    return PublicKey.findProgramAddressSync([
       Buffer.from("strategy_vault"),
       mint.toBuffer(),
       Buffer.from([riskLevel])
     ], this.program.programId);
-    return await this.program.account.strategyVault.fetch(strategyVaultPDA);
   }
 
   async userDeposit({ depositor, mint, riskLevel, amount }: { depositor: Keypair; mint: PublicKey; riskLevel: number; amount: number; }) {
@@ -202,7 +319,7 @@ export class NyxClient {
         strategyVault: strategyVaultPDA,
         depositorAccount: depositorPDA,
         vaultTokenAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId
       })
@@ -255,7 +372,7 @@ export class NyxClient {
         profitToken: mint,
         strategyVault: strategyVaultPDA,
         treasuryVault: treasuryVaultPDA,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
@@ -337,7 +454,7 @@ export class NyxClient {
         treasuryVaultTokenAccount: treasuryVaultATA,
         strategyVaultTokenAccount: strategyVaultATA,
         globalConfig: globalConfigPDA,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
       .signers([depositor])

@@ -1,127 +1,62 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-token_interface::{Mint, TokenAccount, TransferChecked, transfer_checked, TokenInterface}
-};
+use crate::dlmm_cpi::handle_dlmm_swap;
+use crate::dlmm_cpi::DlmmSwap;
 
-use crate::state::{DepositorAccount, GlobalConfig,  StrategyVault, TreasuryVault};
-use crate::error::ErrorCode;
-
+/// Accounts required for arbitrage between two DLMM pools.
 #[derive(Accounts)]
 pub struct ExecuteArbitrage<'info> {
-
+    // Accounts for the first swap (buy from lower-priced pool)
     #[account(mut)]
-    pub depositor: Signer<'info>,
+    pub pool_a: DlmmSwap<'info>,
 
+    // Accounts for the second swap (sell to higher-priced pool)
     #[account(mut)]
-    pub deposit_token: InterfaceAccount<'info, Mint>,
+    pub pool_b: DlmmSwap<'info>,
 
+    // The user performing the arbitrage
     #[account(mut)]
-    pub depositor_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    #[account(mut)]
-    pub strategy_vault: Account<'info, StrategyVault>,
-
-    #[account(
-        seeds = [b"treasury_vault"],
-        bump,
-    )]
-    pub treasury_vault: Account<'info, TreasuryVault>,
-
-    #[account(
-        mut,
-        constraint = treasury_vault_token_account.mint == deposit_token.key() @ ErrorCode::InvalidMint,
-        constraint = treasury_vault_token_account.owner == treasury_vault.key() @ ErrorCode::InvalidOwner,
-    )]
-    pub treasury_vault_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        constraint = strategy_vault_token_account.mint == deposit_token.key() @ ErrorCode::InvalidMint,
-        constraint = strategy_vault_token_account.owner == strategy_vault.key() @ ErrorCode::InvalidOwner,
-    )]
-    pub strategy_vault_token_account: InterfaceAccount<'info, TokenAccount>,
-   
-    #[account(mut)]
-    pub global_config: Account<'info, GlobalConfig>,
-
-    pub token_program: Interface<'info, TokenInterface>,
-
-    pub system_program: Program<'info, System>,
+    pub user: Signer<'info>,
 }
 
-
-pub fn execute_arbitrage(ctx: Context<ExecuteArbitrage>, risk_level: u8) -> Result<()> {
-    let profit_generated = 100_000_000;
-    transfer_profit(ctx.accounts, risk_level, profit_generated)?;
-
-    let total_deposits_on_strategy = ctx.accounts.strategy_vault.total_deposits;
-
-    // Iterate over remaining_accounts and treat them as DepositorAccount
-    for acc_info in ctx.remaining_accounts.iter() {
-        let mut depositor_account = Account::<DepositorAccount>::try_from(&acc_info)?;
-
-        let share = depositor_account
-            .total_amount_deposited
-            .checked_mul(profit_generated)
-            .ok_or(ErrorCode::ArithmeticOverflow)?
-            .checked_div(total_deposits_on_strategy)
-            .ok_or(ErrorCode::ArithmeticOverflow)?;
-
-        depositor_account.net_profit = depositor_account
-            .net_profit
-            .checked_add(share)
-            .ok_or(ErrorCode::ArithmeticOverflow)?;
-
-        depositor_account.exit(&crate::ID)?; // Persist changes
-    }
-
-    Ok(())
-}
-
-
-// transfer profits from strategy vault to treasury vault, decide on delegation or later
-pub fn transfer_profit(ctx: Context<ExecuteArbitrage>, risk_level: u8, user_swap_profit: u64) -> Result<()> {
-
-    let strategy_vault_info = &mut ctx.accounts.strategy_vault;
-
-    let vault_authority_seeds = &[
-        b"strategy_vault",
-        strategy_vault_info.deposit_token_mint.as_ref(),
-        &risk_level.to_be_bytes(),
-        &[strategy_vault_info.strategy_vault_bump],
-    ];
-    
-    transfer_checked(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            TransferChecked {
-                from: ctx.accounts.strategy_vault_token_account.to_account_info(),
-                to: ctx.accounts.treasury_vault_token_account.to_account_info(),
-                authority: strategy_vault_info.to_account_info(),
-                mint: ctx.accounts.deposit_token.to_account_info(),
-            },
-            &[vault_authority_seeds],
+/// Executes arbitrage by performing two sequential swaps:
+/// 1. Buys token from Pool A (lower price)
+/// 2. Sells token to Pool B (higher price)
+///
+/// # Arguments
+/// * `ctx` - The context containing accounts and programs.
+/// * `amount_in` - The amount of input tokens to use in the first swap.
+/// * `min_amount_out_a` - The minimum amount of output tokens expected from the first swap.
+/// * `min_amount_out_b` - The minimum amount of output tokens expected from the second swap.
+///
+/// # Returns
+/// Returns a `Result` indicating success or failure.
+pub fn execute_arbitrage<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ExecuteArbitrage<'info>>,
+    amount_in: u64,
+    min_amount_out_a: u64,
+    min_amount_out_b: u64,
+) -> Result<()> {
+    // Perform the first swap (buy from Pool A)
+    handle_dlmm_swap(
+        Context::new(
+            ctx.program_id,
+            &mut ctx.accounts.pool_a,
+            ctx.remaining_accounts,
         ),
-        user_swap_profit,
-        ctx.accounts.deposit_token.decimals,
+        amount_in,
+        min_amount_out_a,
     )?;
 
-    emit!(ProfitTransferredEvent {
-        depositor: ctx.accounts.depositor.key(),
-        deposit_token: ctx.accounts.deposit_token.key(),
-        amount: user_swap_profit,
-        timestamp: Clock::get()?.unix_timestamp,
-    });
+    // Perform the second swap (sell to Pool B)
+    handle_dlmm_swap(
+        Context::new(
+            ctx.program_id,
+            &mut ctx.accounts.pool_b,
+            ctx.remaining_accounts,
+        ),
+        min_amount_out_a, // Use output from first swap as input for second swap
+        min_amount_out_b,
+    )?;
 
-
-    return Ok(());
-}
-
-
-#[event]
-pub struct ProfitTransferredEvent {
-    pub depositor: Pubkey,
-    pub deposit_token: Pubkey,
-    pub amount: u64,
-    pub timestamp: i64,
+    Ok(())
 }

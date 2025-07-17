@@ -1,0 +1,61 @@
+{
+  "admin": "gBNwrB6w5gkQPEu72fBQWcfzCbGgMnH38EpmqYKH3xy",
+  "administrators": "7F6XU6H1XBpnaL4NtUohVFGqNgdSymLvfrqythnmZhG6",
+  "globalConfig": "Go8wpLZmXDskeVc9kDkbzdJtVuM6bPS8PfnNkVVMgioZ",
+  "treasuryVault": "FHTdymkLPPK78FXLssaHrVtf5orm4Z6aHuXcMWaAh9oB",
+  "usdcMint": "ABTdLxmMQD6h7hkPdHxoL48C9n7h7GDQfvy9qKZYgYWi",
+  "strategyVaults": {
+    "risk_1": "GhgF3NgZMNtfGNpqLKW6Htww887uqdLahLFQ6DupvPK6",
+    "risk_2": "wpfQX2nUK5NFkd6PRPhEPy6bqdTEQs93JCdTPMXhqJw",
+    "risk_3": "2euPBQZ3JtUhXp6VQeAqBnFPTvtSiQFW69azydyGR9iX",
+    "risk_4": "ARPU2EWPfiwQnyKLaQPXV7YEGqfwL7umCX2zXBRBvidR",
+    "risk_10": "BNr4vjQEgS1MuyBEPDZw9RuvgkiL8wippmooa3f5ce11"
+  },
+  "depositors": {},
+  "ammWallets": {
+    "main": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew"
+  },
+  "users": {
+    "ammWallet": {
+      "pubkey": "73hcP7TAJdg7bjFA6ZP2jfcwzVH87umjTnGQFhFF2iew",
+      "usdcTokenAccount": "2AJDdRsyZkAhyiWhv8FUt1a5foCcRXokyFHDgvyYnsN1",
+      "usdcBalance": 1000000
+    },
+    "testUser1": {
+      "pubkey": "9HgLXWgRwJySS2KDi25FWbkoURPvo6TgnBbEui3s6pvY",
+      "usdcTokenAccount": "tQ1CGdzDR56TBKkLnqENmobMMmGip75QrZkxaAywrc9",
+      "usdcBalance": 10000
+    },
+    "testUser2": {
+      "pubkey": "9gqsRMRhaaSwPr5F3Fm8Hmtpqy3pWAxFT78kdCLtmDxw",
+      "usdcTokenAccount": "9oHsvKB8R1YZ9dsEyccqLmftHqUNRp4PD4PydkqKycPh",
+      "usdcBalance": 15000
+    },
+    "testUser3": {
+      "pubkey": "B5oV1x87Csa5z76yECQsqegYpySLC3cyi3cePMNaZyQX",
+      "usdcTokenAccount": "Fc1s6DoXn7kY2gEgyGkLbr3S9W9B4j9zaYDBXpkks1G4",
+      "usdcBalance": 20000
+    },
+    "testUser4": {
+      "pubkey": "9eAThdrVWsNMHZFXpTRuUkeTrJPwqqsUCecNC7rAgkRA",
+      "usdcTokenAccount": "HLyAazJ8AEQUhKm7bqcP7tZpTCkyoJCkDmmzyp5QXuoZ",
+      "usdcBalance": 25000
+    },
+    "testUser5": {
+      "pubkey": "2Hn5jxqqkUNep5c5w7nNwsZBgXMRGjM4KnNPLhrhdE9U",
+      "usdcTokenAccount": "CCpdiSSqX3TaZtdunwMttkQfTCNrDNhmmQ1TUV5mdhfz",
+      "usdcBalance": 30000
+    },
+    "admin": {
+      "pubkey": "gBNwrB6w5gkQPEu72fBQWcfzCbGgMnH38EpmqYKH3xy",
+      "usdcTokenAccount": "CSw12qLFqdoEPAq1KAt9qpGJEWzBwTY2B7S1aLbe6Sez",
+      "usdcBalance": 0
+    },
+    "deployer": {
+      "pubkey": "FZCJkMxcV7sS4V1BUAfGsSwj9M5briZ3ujkbhm35jiMF",
+      "usdcTokenAccount": "9J6RfTdA5eN8NMAzQUyKcSaMw4aU3eChRrzmbCexiTnt",
+      "usdcBalance": 0
+    }
+  },
+  "lastUpdate": 1751890341145
+}

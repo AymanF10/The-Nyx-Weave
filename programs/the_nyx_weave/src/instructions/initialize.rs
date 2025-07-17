@@ -86,6 +86,13 @@ pub fn initialize_administrators(ctx: Context<AdminInfo>, admin_pubkey: Pubkey) 
     Ok(())
 }
 
+pub fn update_admin(ctx: Context<AdminInfo>, admin_pubkey: Pubkey) -> Result<()> {
+    let admin_info = &mut ctx.accounts.admin;
+    admin_info.administrators.push(admin_pubkey);
+    admin_info.administrators_bump = ctx.bumps.admin;
+    Ok(())
+}
+
 /// Initialize the global configuration and treasury vault
 /// Sets up platform parameters and creates the treasury account
 pub fn initialize_config_treasury(ctx: Context<Initialize>, fee_bps: u64, min_profit_threshold: u64, max_retries: u8) -> Result<()> {

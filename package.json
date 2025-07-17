@@ -2,10 +2,24 @@
   "license": "ISC",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "setup:devnet": "ts-node simulate/0_setup_devnet.ts",
+    "test:er": "ANCHOR_PROVIDER_URL=https://api.devnet.solana.com ANCHOR_WALLET=arbitrage-wallet.json ts-mocha -p ./tsconfig.json -t 1000000 tests/er-delegation-commit.ts",
+    "test:er:full": "ts-node tests/run-er-tests.ts",
+    "test:nyx:localnet": "ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 ANCHOR_WALLET=arbitrage-wallet.json ts-mocha -p ./tsconfig.json -t 1000000 tests/the_nyx_weave.ts",
+    "sim:setup": "ts-node simulate/0_setup_devnet.ts",
+    "sim:create-strategy": "ts-node simulate/2_create_strategy.ts",
+    "sim:deposit": "ts-node simulate/2_deposit.ts",
+    "sim:withdraw": "ts-node simulate/3_withdraw.ts",
+    "sim:arbitrage": "ts-node simulate/4_execute_arbitrage.ts",
+    "sim:claim": "ts-node simulate/5_claim_profits.ts",
+    "sim:balances": "ts-node simulate/6_check_balances.ts",
+    "sim:all": "ts-node simulate/run_all.ts",
+    "sim:sequence": "npm run sim:setup && npm run sim:create-strategy && npm run sim:deposit && npm run sim:arbitrage && npm run sim:claim && npm run sim:balances"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
+    "@magicblock-labs/ephemeral-rollups-sdk": "^0.2.5",
     "@solana/spl-token": "^0.4.13"
   },
   "devDependencies": {

@@ -14,8 +14,9 @@ pub use state::*;
 pub use instructions::*;
 pub use error::*;
 
-declare_id!("2N1TRSvQTNxH52mhqbgn3XShtXZuPQoaAk1puGw2uJeF");
+declare_id!("CU8H5mnb1CdmJJiQj5AkowMRFWt7boSwKar6DxS5VUiu");
 
+#[ephemeral]
 #[program]
 pub mod the_nyx_weave {
     use super::*;
@@ -65,6 +66,28 @@ pub mod the_nyx_weave {
         Ok(())
     }
 
+    // DELEGATE STRATEGY VAULT TO THE ER
+    pub fn delegate_strategy(ctx: Context<DelegateArbitrage>, token: Pubkey, risk_level: u8) -> Result<()> {
+        ctx.accounts.delegate_strategy_vault_to_er(token, risk_level)?;
+        Ok(())
+    }
+
+
+    // COMMIT ARBITRAGE TO BASE LAYER WITHOUT UNDELEGATING
+    pub fn commit_arbitrage_no_undelegate(ctx: Context<ArbitrageCommit>) -> Result<()> {
+
+        ctx.accounts.commit_arbitrage_without_undelegating()?;
+        Ok(())
+    }
+
+    // COMMIT ARBITRAGE TO BASE LAYER AND UNDELEGATE SV TO ALLOW FOR WITHDRAWAL
+    pub fn commit_arbitrage_and_undelegate(ctx: Context<ArbitrageCommit>) -> Result<()> {
+
+        ctx.accounts.commit_arbitrage_plus_undelegate()?;
+        Ok(())
+    }
+
+
     /// Allow users to withdraw their funds from a strategy
     pub fn user_withdraw(ctx: Context<UserDeposit>, risk_level: u8, amount: u64) -> Result<()> {
         instructions::withdraw(ctx, risk_level, amount)?;
@@ -75,6 +98,11 @@ pub mod the_nyx_weave {
     pub fn claim_profit(ctx: Context<ClaimProfit>, risk_level: u8) -> Result<()> {
         instructions::claim_profit(ctx, risk_level)?;
      
+        Ok(())
+    }
+
+    pub fn update_admin(ctx: Context<AdminInfo>, admin_pubkey: Pubkey) -> Result<()> {
+        instructions::update_admin(ctx, admin_pubkey)?;
         Ok(())
     }
 

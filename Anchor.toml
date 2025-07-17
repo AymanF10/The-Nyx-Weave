@@ -5,15 +5,18 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
+[programs.devnet]
+the_nyx_weave = "CU8H5mnb1CdmJJiQj5AkowMRFWt7boSwKar6DxS5VUiu"
+
 [programs.localnet]
-the_nyx_weave = "2N1TRSvQTNxH52mhqbgn3XShtXZuPQoaAk1puGw2uJeF"
+the_nyx_weave = "CU8H5mnb1CdmJJiQj5AkowMRFWt7boSwKar6DxS5VUiu"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "devnet"
+wallet = "~/magic/deploy.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

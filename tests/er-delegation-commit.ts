@@ -1,0 +1,339 @@
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import {
+    GetCommitmentSignature
+} from "@magicblock-labs/ephemeral-rollups-sdk";
+import {
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    getAssociatedTokenAddressSync,
+    TOKEN_2022_PROGRAM_ID,
+    TOKEN_PROGRAM_ID
+} from "@solana/spl-token";
+import {
+    Keypair,
+    PublicKey,
+    SystemProgram
+} from "@solana/web3.js";
+import { expect } from "chai";
+import * as fs from "fs";
+import * as path from "path";
+import { NyxClient } from "../sdk/nyx-weave-client";
+import { loadKeypair } from "../simulate/util";
+import { TheNyxWeave } from "../target/types/the_nyx_weave";
+
+describe("Ephemeral Rollup Delegation and Commit Tests", () => {
+  // Configure the client to use the local cluster.
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+
+  // Ephemeral Rollup Provider
+  const ephemeralProvider = new anchor.AnchorProvider(
+    new anchor.web3.Connection(
+      process.env.PROVIDER_ENDPOINT || "https://devnet.magicblock.app/",
+      { wsEndpoint: process.env.WS_ENDPOINT || "wss://devnet.magicblock.app/" }
+    ),
+    anchor.Wallet.local()
+  );
+
+  const program = anchor.workspace.the_nyx_weave as Program<TheNyxWeave>;
+  let client: NyxClient;
+
+  // TEST SETUP - Load keypairs from setup script
+  let usdcTokenMint: PublicKey;
+  let deployer: Keypair;
+  let admin: Keypair;
+  let ammWallet: Keypair;
+  let testUser1: Keypair;
+  let testUser2: Keypair;
+  let testUser3: Keypair;
+  let testUser4: Keypair;
+  let testUser5: Keypair;
+  let unauthorizedUser: Keypair;
+
+  // Load program state from setup script
+  let programState: any;
+
+  before(async () => {
+    console.log("🔧 Setting up test environment...");
+    
+    // Load keypairs from setup script
+    try {
+      deployer = loadKeypair("./simulate/arbitrage-wallet.json");
+      admin = loadKeypair("./simulate/arbitrage-wallet.json");
+      ammWallet = loadKeypair("./simulate/amm-wallet.json");
+      testUser1 = loadKeypair("./simulate/test-user-1.json");
+      testUser2 = loadKeypair("./simulate/test-user-2.json");
+      testUser3 = loadKeypair("./simulate/test-user-3.json");
+      testUser4 = loadKeypair("./simulate/test-user-4.json");
+      testUser5 = loadKeypair("./simulate/test-user-5.json");
+      unauthorizedUser = loadKeypair("./simulate/unauthorized-user.json");
+      console.log("✅ Loaded existing keypairs from setup script");
+    } catch (error) {
+      console.log("❌ Failed to load keypairs. Please run the setup script first:");
+      console.log("   npm run setup:devnet");
+      throw error;
+    }
+
+    console.log("✅ Loaded test user keypairs from setup script");
+
+    // Load program state from setup script
+    const statePath = path.join(__dirname, "../simulate/nyx_state.json");
+    if (fs.existsSync(statePath)) {
+      programState = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+      usdcTokenMint = new PublicKey(programState.usdcMint);
+      console.log("✅ Loaded program state from setup script");
+    } else {
+      console.log("❌ Program state not found. Please run the setup script first:");
+      console.log("   npm run setup:devnet");
+      throw new Error("Program state not found");
+    }
+
+    // Initialize client
+    client = new NyxClient(provider);
+    console.log("✅ Initialized NyxWeave client");
+
+    // Note: Skipping airdrops to avoid 429 error codes
+    // Users will need to be funded manually or through other means
+    console.log("💰 Skipping airdrops to avoid rate limiting (429 errors)");
+    console.log("⚠️ Please ensure user accounts have sufficient SOL for testing");
+
+    // Note: Test users are already funded with USDC in the setup script
+    console.log("🪙 Test users already funded with USDC from setup script");
+
+    console.log("🎉 Test environment setup complete!");
+    console.log("📊 Current state:");
+    console.log("- USDC Mint:", usdcTokenMint.toBase58());
+    console.log("- Deployer:", deployer.publicKey.toBase58());
+    console.log("- Admin:", admin.publicKey.toBase58());
+    console.log("- AMM Wallet:", ammWallet.publicKey.toBase58());
+    console.log("- Test User 1:", testUser1.publicKey.toBase58());
+    console.log("- Test User 2:", testUser2.publicKey.toBase58());
+    console.log("- Test User 3:", testUser3.publicKey.toBase58());
+    console.log("- Test User 4:", testUser4.publicKey.toBase58());
+    console.log("- Test User 5:", testUser5.publicKey.toBase58());
+    console.log("- Unauthorized User:", unauthorizedUser.publicKey.toBase58());
+  });
+
+  it("TEST 6  :::  Delegating Strategy Vault", async () => {
+    const riskLevel = 10;
+    const strategyVaultPDA = (await client.getStrategyVault(usdcTokenMint, riskLevel))[0];
+
+    // Correct ATA creation using TOKEN_PROGRAM_ID
+    /*
+    const strategyVaultATA = getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      strategyVaultPDA,
+      true,
+      TOKEN_2022_PROGRAM_ID,
+    );*/
+
+    //console.log("USDC Mint: ", usdcTokenMint.toBase58());
+    //console.log("Strategy Vault ATA:", strategyVaultATA.toBase58());
+    //console.log("Strategy Vault PDA:", strategyVaultPDA.toBase58());
+    
+    // Get latest blockhash from both providers
+    const [baseBlockhash, erBlockhash] = await Promise.all([
+      provider.connection.getLatestBlockhash(),
+      ephemeralProvider.connection.getLatestBlockhash()
+    ]);
+
+    try {
+      // Build the transaction
+      const tx = await program.methods
+        .delegateStrategy(usdcTokenMint, riskLevel)
+        .accountsPartial({
+          caller: admin.publicKey,
+          strategyVault: strategyVaultPDA,
+        })
+        .transaction();
+
+      // Set fee payer and blockhash
+      tx.feePayer = provider.wallet.publicKey;
+      tx.recentBlockhash = baseBlockhash.blockhash;
+
+      // Sign with admin (required for strategy operations)
+      tx.sign(admin);
+
+      // ER signs transaction
+      const signedTx = await ephemeralProvider.wallet.signTransaction(tx);
+
+      // // Send and confirm
+       const txHash = await provider.connection.sendRawTransaction(
+         signedTx.serialize(),
+         { skipPreflight: true }
+       );
+
+       console.log("Delegation Tx Hash:", txHash);
+      
+      // // Confirm transaction
+      // await provider.connection.confirmTransaction({
+      //   signature: txHash,
+      //   blockhash: baseBlockhash.blockhash,
+      //   lastValidBlockHeight: baseBlockhash.lastValidBlockHeight
+      // });
+
+      // console.log("Delegation confirmed!");
+    } catch (error) {
+      console.error("Delegation failed:", error);
+      throw error;
+    }
+});
+
+  it.skip("TEST 7 ::: Commit Arbitrage Without Undelegating", async () => {
+    // Get The PDA
+    const riskLevel = 1;
+    const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
+      program.programId
+    );
+
+    const [adminPDA, adminPDABump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("administrators")],
+      program.programId
+    );
+
+    const strategyVaultATA = await getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      strategyVaultPDA,
+      true,
+      program.programId,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+    
+    let commit_no_undelegate_tx = await program.methods
+      .commitArbitrageNoUndelegate()
+      .accounts({
+        caller: admin.publicKey,
+        //@ts-ignore
+        strategyVault: strategyVaultPDA,
+        admins: adminPDA,
+        vaultTokenAccount: strategyVaultATA,
+      })
+      .transaction();
+      commit_no_undelegate_tx.feePayer = ephemeralProvider.wallet.publicKey;
+      
+      commit_no_undelegate_tx.recentBlockhash = (await ephemeralProvider.connection.getLatestBlockhash()).blockhash;
+      commit_no_undelegate_tx = await ephemeralProvider.wallet.signTransaction(commit_no_undelegate_tx);
+      const commit_no_undelegate_tx_hash = await ephemeralProvider.sendAndConfirm(
+        commit_no_undelegate_tx, [], {skipPreflight: true}
+      );
+
+      // Get Commitment Signature
+      const commitSignature = await GetCommitmentSignature(
+        commit_no_undelegate_tx_hash,
+        ephemeralProvider.connection
+      );
+
+      // log tx on base
+      console.log("commit transaction on base is: ", commitSignature);
+
+  });
+
+  it.skip("TEST 8 ::: Commit Arbitrage And Undelegate From ER", async () => {
+    // Get The PDA
+    const riskLevel = 1;
+    const [strategyVaultPDA, strategyVaultBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("strategy_vault"), usdcTokenMint.toBuffer(), Buffer.from([riskLevel])],
+      program.programId
+    );
+    const [adminPDA, adminPDABump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("administrators")],
+      program.programId
+    );
+
+    const strategyVaultATA = await getAssociatedTokenAddressSync(
+      usdcTokenMint,
+      strategyVaultPDA,
+      true,
+      program.programId,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    console.log('--------------------------------');
+    console.log("Strategy Vault ATA: ", strategyVaultATA.toBase58());
+    console.log("Strategy Vault PDA: ", strategyVaultPDA.toBase58());
+    console.log("Admin PDA: ", adminPDA.toBase58());
+    console.log('--------------------------------');
+    
+    let commit_and_undelegate_tx = await program.methods
+      .commitArbitrageAndUndelegate()
+      .accounts({
+        caller: admin.publicKey,
+        //@ts-ignore
+        strategyVault: strategyVaultPDA,
+        admins: adminPDA,
+        vaultTokenAccount: strategyVaultATA,
+      })
+      .transaction();
+      // Base Layer provider wallet as fee payer
+      commit_and_undelegate_tx.feePayer = provider.wallet.publicKey;
+      // Recent Blockhash of ER
+      commit_and_undelegate_tx.recentBlockhash = (await ephemeralProvider.connection.getLatestBlockhash()).blockhash;
+      // ER wallet signs transaction
+      commit_and_undelegate_tx = await ephemeralProvider.wallet.signTransaction(commit_and_undelegate_tx);
+      // ER will send and confirm transaction
+      const commit_and_undelegate_tx_hash = await ephemeralProvider.sendAndConfirm(
+        commit_and_undelegate_tx, [], {skipPreflight: true}
+      );
+      console.log("Commit And Undelegate from ER tx hash is: ", commit_and_undelegate_tx_hash);
+  });
+
+  // Additional test for user deposits and withdrawals
+  it.skip("TEST 9 ::: User Deposit and Withdrawal", async () => {
+    const riskLevel = 1;
+    const depositAmount = 100 * 10 ** 6; // 100 USDC
+
+    // User deposits into strategy vault
+    await client.userDeposit({
+      depositor: testUser1,
+      mint: usdcTokenMint,
+      riskLevel,
+      amount: depositAmount
+    }
+    );
+
+    // Verify deposit
+    const strategyVault = await client.getStrategyVault(usdcTokenMint, riskLevel);
+    expect(strategyVault.totalDeposits.toNumber()).to.be.gte(depositAmount);
+
+    // User withdraws from strategy vault
+    const withdrawAmount = 50 * 10 ** 6; // 50 USDC
+    await client.userWithdraw({
+      depositor: testUser1,
+      mint: usdcTokenMint,
+      riskLevel,
+      amount: withdrawAmount});
+
+    console.log("✅ User deposit and withdrawal test completed");
+  });
+
+  // Test for executing arbitrage mock
+  it.skip("TEST 10 ::: Execute Arbitrage Mock", async () => {
+    const riskLevel = 1;
+    const arbitrageAmount = 50 * 10 ** 6; // 50 USDC
+
+    const txHash = await client.executeArbitrageMock({
+      ammWallet,
+      mint: usdcTokenMint,
+      riskLevel,
+      amount: arbitrageAmount
+    }
+    );
+
+    console.log("✅ Arbitrage mock executed:", txHash);
+  });
+
+  // Test for claiming profits
+  it.skip("TEST 11 ::: Claim Profits", async () => {
+    const riskLevel = 1;
+
+    const txHash = await client.claimProfit({
+      depositor: testUser1,
+      mint: usdcTokenMint,
+      riskLevel
+    }
+    );
+
+    console.log("✅ Profit claim executed:", txHash);
+  });
+});
